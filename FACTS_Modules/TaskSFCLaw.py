@@ -32,8 +32,8 @@ class TaskSFCLaw():
             x_0[i_TV] = copy.deepcopy(TV_SCORE[i_TV][0]["xBLEND"][i_frm])
             k_BLEND[i_TV] = copy.deepcopy(TV_SCORE[i_TV][0]["kBLEND"][i_frm])
             d_BLEND[i_TV] = copy.deepcopy(TV_SCORE[i_TV][0]["dBLEND"][i_frm])
-    
         
+        #print(x_tilde_record)        
         B_times_xdot_tilde =  np.dot(np.diag(d_BLEND),x_tilde[gv.x_dim:2*gv.x_dim])
         K_times_x_tildeminusx0 = np.dot(np.diag(k_BLEND),x_tilde[0:gv.x_dim] - x_0) # using the old one without the 'spi' pi gesture functionality and etc
         xdotdot= -B_times_xdot_tilde -K_times_x_tildeminusx0 # task state acceleration (xdotdot)

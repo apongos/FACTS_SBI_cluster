@@ -35,8 +35,6 @@ class ArticKinematics_Noise(ArticKinematics):
 def add_plant_noise(plant_scale,norms_adotdot,adotdot):
     np.random.seed()
     adotdot_noise = adotdot + plant_scale*norms_adotdot*np.random.normal(0,1,gv.a_dim)
-    #print("adotdot", adotdot)
-    #print("adotdot_noise", adotdot_noise)
     return adotdot_noise
 
     

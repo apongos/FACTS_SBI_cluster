@@ -40,14 +40,24 @@ def main(argv):
     GestScore, ART, ms_frm, last_frm = MakeGestScore(argv[1],target_noise)
     
     # initialize vectors to monitor position at each timestep
-    a_record = np.empty([ntrials,last_frm,gv.a_dim])
-    x_record = np.empty([ntrials,last_frm,gv.x_dim])
-    formant_record = np.empty([ntrials,last_frm,3])
-    shift_record = np.empty([ntrials,last_frm,3])
-    a_tilde_record = np.empty([ntrials,last_frm,gv.a_dim])
-    a_dot_record = np.empty([ntrials,last_frm,gv.a_dim])
-    a_dotdot_record = np.empty([ntrials,last_frm,gv.a_dim])
-    predict_formant_record = np.empty([ntrials,last_frm,3])
+    x_tilde_delaywindow = np.full([20,gv.x_dim*2], np.nan) #a new variable that state estimators will have a partial access to
+    a_tilde_delaywindow = np.full([20,gv.a_dim*2], np.nan) #a new variable that state estimators will have a partial access to
+
+
+    x_tilde_record = np.full([last_frm+20,gv.x_dim*2], np.nan) #changed
+    somato_record = np.full([last_frm+20,gv.a_dim*2], np.nan) #changed
+    formant_record = np.full([last_frm+20,3], np.nan) #changed
+    a_tilde_record = np.full([last_frm+20,gv.a_dim*2], np.nan) #changed
+
+    x_tilde_record_alltrials = np.empty([ntrials,last_frm+20,gv.x_dim]) #changed
+    somato_record_alltrials = np.full([ntrials,last_frm+20,gv.a_dim*2], np.nan) #changed
+    formant_record_alltrials = np.full([ntrials,last_frm+20,3], np.nan) #changed
+    shift_record_alltrials = np.full([ntrials,last_frm+20,3], np.nan) #changed
+    
+    a_tilde_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
+    a_dot_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
+    a_dotdot_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
+    predict_formant_record_alltrials = np.empty([ntrials,last_frm+20,3])
 
     #Check if catch trials (no perturbation) are specified in the config file
     if 'CatchTrials' in config.keys():
@@ -64,8 +74,10 @@ def main(argv):
         GestScore, ART, ms_frm, last_frm = MakeGestScore(argv[1],target_noise)         #this is similar with MakeGest in the matlab version
 
         # initial condition
-        x_tilde = string2dtype_array(config['InitialCondition']['x_tilde_init'],'float')
-        a_tilde = string2dtype_array(config['InitialCondition']['a_tilde_init'],'float')
+        x_tilde_delaywindow[0] = string2dtype_array(config['InitialCondition']['x_tilde_init'],'float')
+        a_tilde_delaywindow[0] = string2dtype_array(config['InitialCondition']['a_tilde_init'],'float')
+        x_tilde_record[0] = string2dtype_array(config['InitialCondition']['x_tilde_init'],'float')
+        a_tilde_record[0] = string2dtype_array(config['InitialCondition']['a_tilde_init'],'float')
         a_actual = string2dtype_array(config['InitialCondition']['a_tilde_init'],'float')
         model.artic_sfc_law.reset_prejb() #save the initial artic-to-task model.
 
@@ -73,24 +85,37 @@ def main(argv):
         else: catch = False
         print("catch:", catch)
         
-        for i_frm in range(last_frm):
+        for i_frm in range(last_frm): #gotta change this hardcoded number to aud delay later
             #model function runs FACTS by each frame
-            x_tilde, a_tilde, a_actual, formants, formants_shifted, adotdot, y_hat = model.run_one_timestep(x_tilde, a_tilde, a_actual, GestScore, ART, ms_frm, i_frm, trial, catch)
+            x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat = model.run_one_timestep(x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, GestScore, ART, ms_frm, i_frm, trial, catch)
+            a_tilde_record[i_frm+1] = a_tilde_delaywindow[0,:] #0 is always the most recnet current frame
+            x_tilde_record[i_frm+1] = x_tilde_delaywindow[0,:] #0 is always the most recnet current frame
+
+           #save the FACTS results
             
-            #save the FACTS results
-            a_record[trial, i_frm,:] = a_actual[0:gv.a_dim]
-            a_tilde_record[trial, i_frm,:] = a_tilde[0:gv.a_dim]
-            a_dot_record[trial, i_frm,:] = a_tilde[gv.a_dim:]
-            x_record[trial, i_frm,:] = x_tilde[0:gv.x_dim]
-            formant_record[trial, i_frm,:] = formants
-            predict_formant_record[trial, i_frm,:] = y_hat
-            shift_record[trial, i_frm, :] = formants_shifted
-            a_dotdot_record[trial, i_frm,:] = adotdot
         
+        predict_formant_record_alltrials[trial,] = y_hat
+        #print(a_tilde_record.shape)
+        #print(a_tilde_record_alltrials.shape)
+        #print(a_tilde_record[:,0:gv.a_dim])
+        #print("flipped",a_tilde_record[::-1,0:gv.a_dim])
+        
+        a_tilde_record_alltrials[trial,] = a_tilde_record[:,0:gv.a_dim]
+        #a_dot_record[trial, ] = a_tilde[gv.a_dim:]
+        x_tilde_record_alltrials[trial,] = x_tilde_record[:,0:gv.x_dim]
+        formant_record_alltrials[trial,] = formant_record
+        somato_record_alltrials[trial,] = somato_record
+        #a_dotdot_record[trial, i_frm,:] = adotdot
+        #print(y_hat_record)
         #Update the task state estimator after each trial (if it's not a catch trial)
         #model.artic_state_estimator.update()
         model.task_state_estimator.update(catch)
         
+        del x_tilde_record
+        del a_tilde_record
+        del formant_record
+        del somato_record
+
         plot = True
         if plot:
             if trial < model.auditory_perturbation.PerturbOnsetTrial-1:
@@ -99,8 +124,8 @@ def main(argv):
                 condition = 'learning'
             elif trial >= model.auditory_perturbation.PerturbOffsetTrial:
                 condition = 'aftereffect'
-            single_trial_plots(condition,trial,a_record,a_tilde_record,formant_record,shift_record,x_record,argv)
-        save = True
+            single_trial_plots(condition,trial,a_tilde_record_alltrials,a_tilde_record_alltrials,formant_record_alltrials,predict_formant_record_alltrials,x_tilde_record_alltrials,argv)
+        save = False
         if save:
             write_path = 'Simulation/'
             datafile_name = 'HierAUKF'
@@ -112,10 +137,14 @@ def main(argv):
             #np.savetxt(write_path + 'task_'+ datafile_name + '_' + str(trial) + '.csv',x_record[trial],delimiter=',') 
             #np.savetxt(write_path + 'adotdot_'+ datafile_name + '_' + str(trial) + '.csv',a_dotdot_record[trial],delimiter=',')
     if ntrials > 1 and plot:
-        multi_trial_plots(formant_record, shift_record)
+        multi_trial_plots(formant_record_alltrials)
     plt.show()
 
 if __name__ == "__main__":
+    #main(['DesignC_AUKF_nopertdelay.ini','GesturalScores/KimetalOnlinepert2.G']) #datafile_name: HierAUKFoc
+
+    main(['DesignC_AUKF_onlinepertdelay.ini','GesturalScores/KimetalOnlinepert2.G']) #datafile_name: HierAUKFoc
+
     #main(sys.argv[1:])
     #Fig 3
     #main(['DesignA.ini','GesturalScores/KimetalAdapt.G']) #datafile_name: ClassicArtUp
@@ -123,7 +152,7 @@ if __name__ == "__main__":
     #main(['DesignC.ini','GesturalScores/KimetalAdapt.G']) #datafile_name: HierDef
     
     #Fig 4B
-    main(['DesignC_AUKF.ini','GesturalScores/KimetalAdapt.G']) #datafile_name: HierAUKF
+    #main(['DesignC_AUKF.ini','GesturalScores/KimetalAdapt.G']) #datafile_name: HierAUKF
     #main(['DesignC_AUKF_Mitsuyaetal_Up.ini','GesturalScores/KimetalAdapt.G']) #datafile_name: HierAUKFmitsuyaUp
     #main(['DesignC_AUKF_Mitsuyaetal_Down.ini','GesturalScores/KimetalAdapt.G']) #datafile_name: HierAUKFmitsuyaDown
     #main(['DesignC_Mitsuyaetal_Up.ini','GesturalScores/KimetalAdapt.G']) #datafile_name: HierDefmitsuyaUp

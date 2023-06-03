@@ -17,7 +17,7 @@ class ArticSFCLaw():
     def __init__(self):
         self.prejb = []
         self.reset_prejb()
-    def run(self, xdotdot,a_tilde,ART,i_frm,PROMACT,ms_frm):
+    def run(self, xdotdot,a_tilde_record,ART,i_frm,PROMACT,ms_frm):
         # Overridden by child class
         adotdot = []
         return adotdot;
@@ -69,6 +69,7 @@ class ArticSFCLaw_LWPR_noupdate(ArticSFCLaw):
 
     def run(self, xdotdot,a_tilde,ART,i_frm,PROMACT,ms_frm):
         PROM_NEUT = get_prom_neut(ART,i_frm)
+        #a_tilde = a_tilde_record[i_frm]
         NEUTACC,NULLACC = get_neutacc_nullacc(a_tilde)
         jb = self.model.predict_J(a_tilde[0:gv.a_dim]) #LWPR jacobian
         JNTACC_NULL, JAC, IPJAC = get_null_prj(ART,i_frm,PROMACT,jb,NULLACC)

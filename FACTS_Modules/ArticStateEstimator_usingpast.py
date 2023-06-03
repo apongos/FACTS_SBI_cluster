@@ -25,7 +25,6 @@ class ASEHierInterface:
 class ArticStateEstimator(ABC):
     def update(self):
         print('ASE Update not implemented')
-
 class ASE_Pass(ArticStateEstimator):
     def run(self, a_tilde,adotdot,formants,a_noise,ms_frm,i_frm,catch):
         a_tilde = a_noise
@@ -227,17 +226,12 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         # if so you can use a_record[i_frm-10] to make the prediction 
         # which woiuld line up temporally with the somato feedback
 
-        self.u_record = np.full([self.Somat_delay,gv.a_dim],np.nan) #last comment 10/27 maybe this is a bad idea
-
         self.h_delay = np.zeros(self.Somat_delay)
         self.h_delay[-1] = 1
-
-        self.rec_delay = np.zeros(self.Somat_delay)
 
         #np.vstack((a,b[None]))
         #the current x_tilde and a_tilde should always be up to date 
         self.y_record = np.full([self.Somat_delay,gv.a_dim*2],np.nan)
-        self.x1_record = np.full([self.Somat_delay,gv.a_dim*2],np.nan)
 
 
     def run(self,a_tilde_delaywindow,adotdot,a_noise,ms_frm,i_frm,catch):
@@ -246,7 +240,7 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         X=seutil.sigmas(x,self.P,self.c) #sigma points around x which are x (1) + x-A (12) and x+A (12) = 25. In other words, 2n + 1 when n = 12. 
         #x1,X1,P1,X2=ArticStatePredict(X,self.Wm,self.Wc,gv.a_dim*2,self.Q,u,ms_frm) #Articulatory State Prediction: unscented transformation of process
         x1,X1,P1,X2=seutil.ArticStatePredict_LWPR(X,self.Wm,self.Wc,gv.a_dim*2,self.Q,u,ms_frm,self.ASP)
-        #rint("x1",x1)
+        
         y=np.zeros(1)
         Y=np.zeros([1,X1.shape[1]])
         Y,y=seutil.SomatosensoryPrediction(self.feedbackType,self.Som_model,Y,y,X1,self.Wm)
@@ -256,8 +250,7 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         self.P1_record = np.vstack((P1[None],self.P1_record[0:-1,:]))
         self.Y_record = np.vstack((Y[None],self.Y_record[0:-1,:]))
         self.y_record = np.vstack((y[None],self.y_record[0:-1,:]))
-        self.u_record = np.vstack((u[None],self.u_record[0:-1,:]))
-        self.x1_record = np.vstack((x1[None],self.x1_record[0:-1,:]))
+
 
 
         #then recursively enter run_recalc ...
@@ -285,8 +278,6 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
             #3/31 things to do
             # now create a delay matrix h to reaplce self.Y_record[ifrm]
             delay_y = np.matmul(np.transpose(self.h_delay),self.y_record)
-            delay_x1 = np.matmul(np.transpose(self.h_delay),self.x1_record)
-
             # I could also apply a similar mechanism for z... perhaps in the other module (delay)
             # the nwe have two separate delay matrices.. one for estimator and one for observation
 
@@ -303,7 +294,7 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
             #print(delay_Y.shape)
             #Y1 = trnasofrmed deviations, P = transformed covariance
             #Y1,self.P = seutil.transformedDevandCov(self.Y_record[9,],delay_y,self.Wc,self.R*2)
-            Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R)
+            Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R*2)
             #save sensory error 
             #self.senmem = sensoryerrorsave(y,z,self.senmem,x1,i_frm)
 
@@ -312,15 +303,10 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
             DeltaX, DeltaCov = seutil.StateCorrection(delay_X2,self.Wc,Y1,self.P,z,delay_y)
 
             #StateUpdate Eq 7,
-            delay_x = delay_x1 + DeltaX
-            #self.P= self.P1_record[i_frm] - DeltaCov #This is up to debate.. P1 from past
-            delay_P= delay_P1 - DeltaCov # 
+            x = x1 + DeltaX
+            #self.P= self.P1_record[i_frm] - DeltaCov #This is up to debate.. P1 from past or P1 from present?
+            self.P= delay_P1 - DeltaCov # I am leaning towards present because x1 is present anyway
 
-            x, delay_P = self.run_recursive_calc(delay_x,delay_P,self.Somat_delay-2,ms_frm)
-            x1 = x
-            #print(delay_P)
-            self.P = delay_P
-        
         if self.learn:
             x = x1
             self.P = self.defP
@@ -329,31 +315,4 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         a_hat = x1
         return a_tilde, a_hat
         
-    def run_recursive_calc(self,delay_x,delay_P,pst_frm,ms_frm):
-        #print("pst_frm",pst_frm)
-        #print(self.u_record[pst_frm])
-        
-        u = self.u_record[pst_frm]
-        X=seutil.sigmas(delay_x,delay_P,self.c) #sigma points around x which are x (1) + x-A (12) and x+A (12) = 25. In other words, 2n + 1 when n = 12. 
-        #x1,X1,P1,X2=ArticStatePredict(X,self.Wm,self.Wc,gv.a_dim*2,self.Q,u,ms_frm) #Articulatory State Prediction: unscented transformation of process
-        x1,X1,rec_P1,X2=seutil.ArticStatePredict_LWPR(X,self.Wm,self.Wc,gv.a_dim*2,self.Q,u,ms_frm,self.ASP)
-        
-        y=np.zeros(1)
-        Y=np.zeros([1,X1.shape[1]])
-        Y,y=seutil.SomatosensoryPrediction(self.feedbackType,self.Som_model,Y,y,X1,self.Wm)
-
-        self.X2_record[pst_frm]=X2[None]
-        self.P1_record[pst_frm]=rec_P1[None]
-        self.Y_record[pst_frm]=Y[None]
-        self.y_record[pst_frm]=y[None]
-        self.x1_record[pst_frm] = x1[None]
-
-        x = x1
-        delay_P = rec_P1
-        #self.P= self.P1_record[i_frm] - DeltaCov #This is up to debate.. P1 from past or P1 from present?
-        if pst_frm == 0:
-            #print("end of recursion")
-            #print(x)
-            return x, delay_P
-        else:
-            return self.run_recursive_calc(x,delay_P,pst_frm-1,ms_frm)
+    

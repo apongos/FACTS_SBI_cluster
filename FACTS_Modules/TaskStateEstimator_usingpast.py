@@ -251,8 +251,8 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
         #print("KTRY",self.Aud_model.predict(x_tilde[0:gv.x_dim]))
 
    
-        #self.X2_record = np.vstack((X2[None],self.X2_record[0:-1,:]))
-        #self.P1_record = np.vstack((P1[None],self.P1_record[0:-1,:]))
+        self.X2_record = np.vstack((X2[None],self.X2_record[0:-1,:]))
+        self.P1_record = np.vstack((P1[None],self.P1_record[0:-1,:]))
         self.Y_record = np.vstack((Y[None],self.Y_record[0:-1,:]))
         self.y_record = np.vstack((y[None],self.y_record[0:-1,:]))
         
@@ -270,24 +270,24 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             #y = self.y_record[i_frm] #Retrieving the prediction made a while ago.
             delay_y = np.matmul(np.transpose(self.h_delay),self.y_record)
             delay_Y = np.tensordot(self.h_delay[:, np.newaxis].T, self.Y_record,axes=[1,0])[0]
-            #delay_X2 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.X2_record,axes=[1,0])[0]
-            #delay_P1 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.P1_record,axes=[1,0])[0]
+            delay_X2 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.X2_record,axes=[1,0])[0]
+            delay_P1 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.P1_record,axes=[1,0])[0]
 
-            Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R*50)
+            Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R*2)
  
             #Y1,self.P = seutil.transformedDevandCov(self.Y_record[i_frm],y,self.Wc,self.R*4.5)
             #save sensory error 
             #self.senmem = sensoryerrorsave(y,z,self.senmem,x1,i_frm)
             obscov = self.P
             #StateCorrection and Eq 5 and 6
-            DeltaX, DeltaCov = seutil.StateCorrection(X2,self.Wc,Y1,self.P,z,delay_y)
+            DeltaX, DeltaCov = seutil.StateCorrection(delay_X2,self.Wc,Y1,self.P,z,delay_y)
             
             #StateUpdate Eq 7, 
             x = x1 + DeltaX
             #print('final x_tilde =  ', x)
 
             #print('DeltaX =  ', DeltaX)
-            self.P= P1 - DeltaCov#covariance update
+            self.P= delay_P1 - DeltaCov#covariance update
             #$print(self.R)
             if self.learn: # current version has no online compensation during adapt
                 x = x1
@@ -311,7 +311,7 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
 
         x_tilde = x
         #x_hat = x1
-        return x_tilde, z
+        return x_tilde, y
         
     def TaskStatePredict(self,X,Wm,Wc,n,R,u):
         #Unscented Transformation for process model

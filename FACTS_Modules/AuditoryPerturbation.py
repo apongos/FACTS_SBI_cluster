@@ -41,7 +41,7 @@ class AuditoryPerturbation():
             if i_frm >= self.PerturbOnsetFrame and i_frm < self.PerturbOffsetFrame and self.PerturbMode != 0:
                 if self.PerturbRamp and trial < self.PerturbRampOnOff[1]:
                     if self.PerturbMode == 1: #absolute shift
-                        print("pert F1 ram: ", self.PerturbExtentRampF1[trial-self.PerturbOnsetTrial])
+                        #print("pert F1 ram: ", self.PerturbExtentRampF1[trial-self.PerturbOnsetTrial])
                         formants_perturbed[0] = Auditory_sense[0] + self.PerturbExtentRampF1[trial-self.PerturbOnsetTrial]
                         formants_perturbed[1] = Auditory_sense[1] + self.PerturbExtentRampF2[trial-self.PerturbOnsetTrial]       
                         formants_perturbed[2] = Auditory_sense[2] + self.PerturbExtentRampF3[trial-self.PerturbOnsetTrial]
@@ -51,7 +51,7 @@ class AuditoryPerturbation():
                         formants_perturbed[2] = Auditory_sense[2] * (2**(self.PerturbExtentRampF3[trial-self.PerturbOnsetTrial]/1200))
                 else:
                     if self.PerturbMode == 1: #absolute shift
-                        print("pert F1 sud: ", self.PerturbExtentF1)
+                        #print("pert F1 sud: ", self.PerturbExtentF1)
                         formants_perturbed[0] = Auditory_sense[0] + self.PerturbExtentF1
                         formants_perturbed[1] = Auditory_sense[1] + self.PerturbExtentF2       
                         formants_perturbed[2] = Auditory_sense[2] + self.PerturbExtentF3

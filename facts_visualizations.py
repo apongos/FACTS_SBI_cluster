@@ -36,10 +36,8 @@ def single_trial_plots(condition,trial,a_record,a_tilde_record,formant_record,pe
     #plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
     #plt.title('Configs: ' + argv[0] + ', GesturalScore: ' + gest_name)
     
-def multi_trial_plots(formants, formants_perturbed):
+def multi_trial_plots(formants):
     plt.figure()
-    plt.gca().set_prop_cycle(None) 
-    plt.plot(np.median(formants[:,:,:],axis=1))
     plt.gca().set_prop_cycle(None) 
     plt.plot(np.median(formants[:,:,:],axis=1))
     plt.xlabel('trial #')

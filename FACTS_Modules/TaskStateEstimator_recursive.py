@@ -235,12 +235,15 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
         #np.vstack((a,b[None]))
         #the current x_tilde and a_tilde should always be up to date 
         self.y_record = np.full([self.Aud_delay,3],np.nan)
+        self.xtil_record =  np.full([self.Aud_delay,gv.x_dim*2],np.nan)
+        self.xdotdot_record =  np.full([self.Aud_delay,gv.x_dim],np.nan)
+        self.x1_record =  np.full([self.Aud_delay,gv.x_dim*2],np.nan)
 
     def run(self,a_tilde_delaywindow,formant_noise,i_frm,catch,xdotdot):
         a_tilde = a_tilde_delaywindow[0] # most recent frame, since this is an internal estimate process
         jac = self.Taskmodel.predict_J(a_tilde[0:gv.a_dim])
         x_tilde = np.append(jac[0],np.matmul(jac[1],a_tilde[gv.a_dim:2*gv.a_dim]))
-        #print(x_tilde)
+        print("xtil",x_tilde.shape)
         #print(self.Taskmodel.predict(a_tilde[0:gv.a_dim]))
 
         X=seutil.sigmas(x_tilde,self.P,self.c) #sigma points around x tilde
@@ -249,20 +252,20 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
         Y,y=seutil.TaskAuditoryPrediction(self.Aud_model,X1,self.Wm)
         z = formant_noise 
         #print("KTRY",self.Aud_model.predict(x_tilde[0:gv.x_dim]))
-
    
-        #self.X2_record = np.vstack((X2[None],self.X2_record[0:-1,:]))
-        #self.P1_record = np.vstack((P1[None],self.P1_record[0:-1,:]))
+        self.X2_record = np.vstack((X2[None],self.X2_record[0:-1,:]))
+        self.P1_record = np.vstack((P1[None],self.P1_record[0:-1,:]))
         self.Y_record = np.vstack((Y[None],self.Y_record[0:-1,:]))
         self.y_record = np.vstack((y[None],self.y_record[0:-1,:]))
-        
+        self.xtil_record = np.vstack((x_tilde[None],self.xtil_record[0:-1,:]))
+        self.x1_record = np.vstack((x1[None],self.x1_record[0:-1,:]))
+        self.xdotdot_record = np.vstack((xdotdot[None],self.xdotdot_record[0:-1,:]))
+
         if np.isnan(z[0]):
             x = x1
             self.P = self.defP
             #y = self.y_record[0,] #Just nan since the prediction was not used, but will be used in the future.
         else:
-
-
             #print("predict: ", y)
             #print("actual: ", z)
             #print(self.P)
@@ -270,24 +273,37 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             #y = self.y_record[i_frm] #Retrieving the prediction made a while ago.
             delay_y = np.matmul(np.transpose(self.h_delay),self.y_record)
             delay_Y = np.tensordot(self.h_delay[:, np.newaxis].T, self.Y_record,axes=[1,0])[0]
-            #delay_X2 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.X2_record,axes=[1,0])[0]
-            #delay_P1 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.P1_record,axes=[1,0])[0]
+            delay_X2 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.X2_record,axes=[1,0])[0]
+            delay_P1 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.P1_record,axes=[1,0])[0]
+            delay_x1 = np.matmul(np.transpose(self.h_delay),self.x1_record)
 
-            Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R*50)
+            Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R*4)
  
             #Y1,self.P = seutil.transformedDevandCov(self.Y_record[i_frm],y,self.Wc,self.R*4.5)
             #save sensory error 
             #self.senmem = sensoryerrorsave(y,z,self.senmem,x1,i_frm)
             obscov = self.P
             #StateCorrection and Eq 5 and 6
-            DeltaX, DeltaCov = seutil.StateCorrection(X2,self.Wc,Y1,self.P,z,delay_y)
+            DeltaX, DeltaCov = seutil.StateCorrection(delay_X2,self.Wc,Y1,self.P,z,delay_y)
             
+            #x = x1 + DeltaX
+            #self.P= P1 - DeltaCov #covariance update
+
+            #print('DeltaX =  ', DeltaX)
+            
+
+
             #StateUpdate Eq 7, 
-            x = x1 + DeltaX
+            delay_x = delay_x1 + DeltaX
             #print('final x_tilde =  ', x)
 
             #print('DeltaX =  ', DeltaX)
-            self.P= P1 - DeltaCov#covariance update
+            delay_P= delay_P1 - DeltaCov #covariance update
+
+            x, delay_P= self.run_recursive_calc(delay_x,delay_P,self.Aud_delay-2)
+            self.P = delay_P
+            
+
             #$print(self.R)
             if self.learn: # current version has no online compensation during adapt
                 x = x1
@@ -311,7 +327,7 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
 
         x_tilde = x
         #x_hat = x1
-        return x_tilde, z
+        return x_tilde, y
         
     def TaskStatePredict(self,X,Wm,Wc,n,R,u):
         #Unscented Transformation for process model
@@ -350,6 +366,34 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
         Y1,P = seutil.transformedDevandCov(Y,y_tmean,Wc,R)
         return y_tmean,Y,P,Y1
 
+
+    def run_recursive_calc(self,delay_x,delay_P,pst_frm):
+        #a_tilde = a_tilde_delaywindow[0] # most recent frame, since this is an internal estimate process
+        #jac = self.Taskmodel.predict_J(a_tilde[0:gv.a_dim])
+        #x_tilde = np.append(jac[0],np.matmul(jac[1],a_tilde[gv.a_dim:2*gv.a_dim]))
+        print("pst_frm",pst_frm)
+        X=seutil.sigmas(delay_x,delay_P,self.c) #sigma points around x tilde
+        #print(delay_x)
+
+        x1,X1,rec_P1,X2 = self.TaskStatePredict(X,self.Wm,self.Wc,gv.x_dim*2,self.Q, self.xdotdot_record[pst_frm]) #transformation of x_tilde (propagation)
+        
+        Y,y=seutil.TaskAuditoryPrediction(self.Aud_model,X1,self.Wm)
+        #print(y)
+        self.X2_record[pst_frm]=X2[None]
+        self.P1_record[pst_frm]=rec_P1[None]
+        self.Y_record[pst_frm]=Y[None]
+        self.y_record[pst_frm]=y[None]
+        self.x1_record[pst_frm] = x1[None]
+
+        x = x1
+        delay_P = rec_P1
+        #self.P= self.P1_record[i_frm] - DeltaCov #This is up to debate.. P1 from past or P1 from present?
+        if pst_frm == 0:
+            #print("end of recursion")
+            #print(x)
+            return x, delay_P
+        else:
+            return self.run_recursive_calc(x,delay_P,pst_frm-1)
 
 
 #Task Estimator used for Fig 5 from Kim et al. (in review).
