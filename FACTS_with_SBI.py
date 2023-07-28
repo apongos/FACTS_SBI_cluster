@@ -133,7 +133,7 @@ def simulator(theta):
 
 def main(num_sim, num_workers):
     # Import real observed data
-    sing_path = '/home/FACTS'
+    sing_path = '/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
     trial_cells_times = scipy.io.loadmat(sing_path+'/sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
     trial_cells_mat = scipy.io.loadmat(sing_path+'/sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
     trial_cells_times = trial_cells_times[:,0:150]
