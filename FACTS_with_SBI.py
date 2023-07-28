@@ -133,8 +133,9 @@ def simulator(theta):
 
 def main(num_sim, num_workers):
     # Import real observed data
-    trial_cells_times = scipy.io.loadmat('sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
-    trial_cells_mat = scipy.io.loadmat('sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
+    sing_path = '/home/FACTS/'
+    trial_cells_times = scipy.io.loadmat(sing_path+'sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
+    trial_cells_mat = scipy.io.loadmat(sing_path+'sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
     trial_cells_times = trial_cells_times[:,0:150]
     trial_cells_mat = trial_cells_mat[:,0:150]
 
@@ -159,11 +160,11 @@ def main(num_sim, num_workers):
     if load_instead == False:
         prior = utils.torchutils.BoxUniform(torch.as_tensor(prior_min), torch.as_tensor(prior_mmax) )
         parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
-        with open(f'./sbi_resources/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        with open(sing_path+f'/sbi_resources/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([parameter_posterior], f)
         
     else:
-        file = open(f'./sbi_resources/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'rb')
+        file = open(sing_path+f'./sbi_resources/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'rb')
         object_file = pickle.load(file)
         parameter_posterior = object_file[0]
         file.close()
