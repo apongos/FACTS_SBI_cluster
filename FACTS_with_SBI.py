@@ -132,9 +132,16 @@ def simulator(theta):
     return formants_produced_record_alltrials[:,:,0].squeeze() 
 
 def main(num_sim, num_workers):
-    import os
+
     print(os.getcwd())
     print(os.listdir(os.curdir))
+
+    # If environment variables are passed, use them
+    if os.environ.get('ENV_NUM_WORKERS') is not None:
+        num_workers = int(os.environ.get('ENV_NUM_WORKERS'))
+    if os.environ.get('ENV_NUM_SIMULATIONS') is not None:
+        num_sim = int(os.environ.get('ENV_NUM_SIMULATIONS'))
+
     # Import real observed data
     sing_path = '/home/FACTS' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
     trial_cells_times = scipy.io.loadmat(sing_path+'/sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
