@@ -163,11 +163,11 @@ def main(num_sim, num_workers):
     if load_instead == False:
         prior = utils.torchutils.BoxUniform(torch.as_tensor(prior_min), torch.as_tensor(prior_mmax) )
         parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
-        with open(sing_path+f'/sbi_resources/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        with open(sing_path+f'/sbi_resources/output/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([parameter_posterior], f)
         
     else:
-        file = open(sing_path+f'/sbi_resources/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'rb')
+        file = open(sing_path+f'/sbi_resources/output/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'rb')
         object_file = pickle.load(file)
         parameter_posterior = object_file[0]
         file.close()
