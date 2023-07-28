@@ -82,7 +82,7 @@ class ASE_UKF(ArticStateEstimator):
         self.Wm=np.append(lam/c,np.zeros(2*(gv.a_dim*2))+0.5/c)           #weights for means
         self.Wc=self.Wm
         self.Wc[0]=self.Wc[0]+(1-alpha**2+beta)         #weights for covariance
-        print(self.Wc)
+        #print(self.Wc)
         self.c=np.sqrt(c)
         self.senmem = []
         if articstateest_configs['learn'] == 'True':

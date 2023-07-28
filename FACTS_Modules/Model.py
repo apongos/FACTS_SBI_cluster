@@ -50,7 +50,7 @@ class Model():
     # Factory methods
     def artic_sfc_law_factory(self,configs):
         model_type = configs['model_type']
-        print('Artic SFC Law Model Type: ', model_type)
+        #print('Artic SFC Law Model Type: ', model_type)
         if model_type == 'lwpr':
             from FACTS_Modules.ArticSFCLaw import ArticSFCLaw_LWPR_noupdate
             artic_sfc_law = ArticSFCLaw_LWPR_noupdate(configs)
@@ -99,7 +99,7 @@ class Model():
     
     def tse_factory(self,tse_configs,R_Auditory,R_Somato):
         model_type = tse_configs['model_type']
-        print('Task State Estimator Model Type: ', model_type)
+        #print('Task State Estimator Model Type: ', model_type)
         if model_type == 'lwpr':
             from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Classic
             task_state_estimator = TSE_LWPR_Classic(tse_configs)
@@ -116,7 +116,7 @@ class Hierarchical_Model(Model):
     
     def tse_factory(self,tse_configs,R_Auditory,R_Somato):
         model_type = tse_configs['model_type']
-        print('Task State Estimator Model Type: ', model_type)
+        #print('Task State Estimator Model Type: ', model_type)
         if model_type == 'lwpr':
             from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Hier
             task_state_estimator = TSE_LWPR_Hier(tse_configs,R_Auditory,R_Somato)
@@ -136,7 +136,7 @@ class Hierarchical_Model(Model):
 class Hierarchical_JacUpdateDebug(Hierarchical_Model):
     def artic_sfc_law_factory(self,configs):
         model_type = configs['model_type']
-        print('Artic SFC Law Model Type: ', model_type)
+        #print('Artic SFC Law Model Type: ', model_type)
         if model_type == 'lwpr':
             from FACTS_Modules.ArticSFCLaw import ArticSFCLaw_LWPR_JacUpdateDebug
             artic_sfc_law = ArticSFCLaw_LWPR_JacUpdateDebug(configs)
@@ -144,7 +144,7 @@ class Hierarchical_JacUpdateDebug(Hierarchical_Model):
 
     def tse_factory(self,tse_configs,R_Auditory,R_Somato):
         model_type = tse_configs['model_type']
-        print('Task State Estimator Model Type: ', model_type)
+        #print('Task State Estimator Model Type: ', model_type)
         if model_type == 'lwpr':
             from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Hier_xdotdotJacUpdateDebug
             task_state_estimator = TSE_LWPR_Hier_xdotdotJacUpdateDebug(tse_configs,R_Auditory,R_Somato)
@@ -165,7 +165,7 @@ class Hierarchical_JacUpdateDebug(Hierarchical_Model):
 class Hierarchical_xdotdot(Hierarchical_Model):
     def tse_factory(self,tse_configs,R_Auditory,R_Somato):
         model_type = tse_configs['model_type']
-        print('Task State Estimator Model Type: ', model_type)
+        #print('Task State Estimator Model Type: ', model_type)
         if model_type == 'lwpr':
             from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Hier_xdotdot
             task_state_estimator = TSE_LWPR_Hier_xdotdot(tse_configs,R_Auditory,R_Somato)

@@ -421,7 +421,7 @@ class TSE_LWPR_Hier_xdotdotJacUpdateDebug(TSE_LWPR_Hier_xdotdot):
                 
                 residual = (z-y)
                 eps = np.matmul(np.matmul(np.transpose(residual),np.linalg.inv(obscov)),residual)
-                print(eps)
+                #print(eps)
                 if eps>50 and self.AUKF:
                     print("AUKF on")
                     DeltaX, DeltaCov = seutil.StateCorrection(X2*self.AUKFmultFactor[0],self.Wc,Y1,obscov,z,y) #commented 052522

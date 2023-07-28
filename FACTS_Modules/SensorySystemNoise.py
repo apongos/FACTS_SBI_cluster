@@ -18,7 +18,7 @@ class SensorySystemNoise():
             # set class data
             self.R_Auditory = 1e0*Auditory_sensor_scale*np.ones(nAuditory)*norms_Auditory
             self.R_Somato = 1e0*Somato_sensor_scale*np.ones(gv.a_dim*2)*norms_AADOT
-            print(self.R_Auditory)
+            #print(self.R_Auditory)
     def run(self,Auditory_sense,Somato_sense):
         #generate perceived feedcback (plant output + noise + AAF)
         np.random.seed()
