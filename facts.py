@@ -48,11 +48,13 @@ def main(argv):
     somato_record = np.full([last_frm+20,gv.a_dim*2], np.nan) #changed
     formant_record = np.full([last_frm+20,3], np.nan) #changed
     a_tilde_record = np.full([last_frm+20,gv.a_dim*2], np.nan) #changed
+    formant_produced_record = np.full([last_frm,3], np.nan)
 
     x_tilde_record_alltrials = np.empty([ntrials,last_frm+20,gv.x_dim]) #changed
     somato_record_alltrials = np.full([ntrials,last_frm+20,gv.a_dim*2], np.nan) #changed
     formant_record_alltrials = np.full([ntrials,last_frm+20,3], np.nan) #changed
     shift_record_alltrials = np.full([ntrials,last_frm+20,3], np.nan) #changed
+    formant_produced_record_alltrials = np.full([ntrials,last_frm,3], np.nan)
     
     a_tilde_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
     a_dot_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
@@ -87,9 +89,10 @@ def main(argv):
         
         for i_frm in range(last_frm): #gotta change this hardcoded number to aud delay later
             #model function runs FACTS by each frame
-            x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat = model.run_one_timestep(x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, GestScore, ART, ms_frm, i_frm, trial, catch)
+            x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced = model.run_one_timestep(x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, GestScore, ART, ms_frm, i_frm, trial, catch)
             a_tilde_record[i_frm+1] = a_tilde_delaywindow[0,:] #0 is always the most recnet current frame
             x_tilde_record[i_frm+1] = x_tilde_delaywindow[0,:] #0 is always the most recnet current frame
+            formants_produced_record[i_frm] = formants_produced
 
            #save the FACTS results
             
@@ -99,7 +102,8 @@ def main(argv):
         #print(a_tilde_record_alltrials.shape)
         #print(a_tilde_record[:,0:gv.a_dim])
         #print("flipped",a_tilde_record[::-1,0:gv.a_dim])
-        
+        formant_produced_record_alltrials[trial,] = formants_produced_record
+
         a_tilde_record_alltrials[trial,] = a_tilde_record[:,0:gv.a_dim]
         #a_dot_record[trial, ] = a_tilde[gv.a_dim:]
         x_tilde_record_alltrials[trial,] = x_tilde_record[:,0:gv.x_dim]
