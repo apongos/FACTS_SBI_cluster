@@ -11,7 +11,7 @@ from FACTS_Modules.TADA import MakeGestScore
 from facts_visualizations import single_trial_plots, multi_trial_plots
 import os 
 import pdb
-import seaborn as sns
+#import seaborn as sns
 
 from sbi.inference import infer
 from sbi import utils as utils
