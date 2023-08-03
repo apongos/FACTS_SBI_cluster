@@ -169,7 +169,7 @@ def main(num_sim, num_workers):
     # prior = torch.distributions.Uniform(torch.as_tensor(mmin), torch.as_tensor(mmax) )
     if load_instead == False:
         prior = utils.torchutils.BoxUniform(torch.as_tensor(prior_min), torch.as_tensor(prior_mmax) )
-        parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers, show_progress_bar=False)
+        parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
         with open(sing_path+f'/sbi_resources/output/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([parameter_posterior], f)
         
