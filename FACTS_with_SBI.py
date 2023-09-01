@@ -20,7 +20,7 @@ import scipy.io
 
 
 def simulator(theta):
-    ini='DesignC_AUKF_onlinepertdelay.ini'
+    ini='DesignC_AUKF_onlinepertdelay_est_noise.ini'
     gFile='GesturalScores/KimetalOnlinepert2.G'
     config = configparser.ConfigParser()
     config.read(ini)
@@ -29,14 +29,32 @@ def simulator(theta):
     #pdb.set_trace()
     try:
         if theta.dim() > 1:
-#             pdb.set_trace()
             #print(theta.numel())
             config['SensoryNoise']['Auditory_sensor_scale'] = str(theta[0][0].item())
             config['SensoryNoise']['Somato_sensor_scale'] = str(theta[0][1].item())
+            
+            config['TaskStateEstimator']['process_scale'] = str(theta[0][2].item())
+            config['TaskStateEstimator']['covariance_scale'] = str(theta[0][3].item())
+            config['ArticStateEstimator']['process_scale'] = str(theta[0][4].item())
+            config['ArticStateEstimator']['covariance_scale'] = str(theta[0][5].item())
+            config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[0][6].item())
+
+            config['SensoryDelay']['Auditory_delay'] = str(theta[0][7].item())
+            config['SensoryDelay']['Somato_delay'] = str(theta[0][8].item())
+            
         else:
             #pdb.set_trace()
             config['SensoryNoise']['Auditory_sensor_scale'] = str(theta[0].item())
             config['SensoryNoise']['Somato_sensor_scale'] = str(theta[1].item())
+            
+            config['TaskStateEstimator']['process_scale'] = str(theta[2].item())
+            config['TaskStateEstimator']['covariance_scale'] = str(theta[3].item())
+            config['ArticStateEstimator']['process_scale'] = str(theta[4].item())
+            config['ArticStateEstimator']['covariance_scale'] = str(theta[5].item())
+            config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[6].item())
+
+            config['SensoryDelay']['Auditory_delay'] = str(theta[7].item())
+            config['SensoryDelay']['Somato_delay'] = str(theta[8].item())
     except:
         pdb.set_trace()
 
@@ -143,7 +161,7 @@ def main(num_sim, num_workers):
         num_sim = int(os.environ.get('ENV_NUM_SIMULATIONS'))
 
     # Import real observed data
-    sing_path = '/home/FACTS' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
+    sing_path = './' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
     trial_cells_times = scipy.io.loadmat(sing_path+'/sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
     trial_cells_mat = scipy.io.loadmat(sing_path+'/sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
     trial_cells_times = trial_cells_times[:,0:150]

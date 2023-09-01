@@ -19,5 +19,6 @@ class AcousticSynthesis():
     def run(self, a):
         AM = np.zeros(7,dtype='float32') #Maeda model requires 6 articulators + larynx
         AM[0:gv.a_dim] = a[0:gv.a_dim]
+        #print('maeda inputs', self.TC,self.PC,AM,self.anc)
         formants,internal_x,internal_y,external_x,external_y= maedaplant(5,29,29,29,29,self.TC,self.PC,AM,self.anc)
         return formants[0:3]

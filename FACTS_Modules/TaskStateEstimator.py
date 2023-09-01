@@ -22,6 +22,8 @@ from .LWPR_Model.lwpr import LWPR
 from abc import ABC, abstractmethod
 from . import seutil
 import math
+from . import util
+import pdb
 
 class TaskStateEstimator(ABC):
     def update(self,catch):
@@ -52,7 +54,8 @@ class TSE_LWPR_Classic(TSE_LWPR,TSEClassicInterface):
     def run(self,a_tilde):
         jac = self.Taskmodel.predict_J(a_tilde[0:gv.a_dim])
         x_tilde = np.append(jac[0],np.matmul(jac[1],a_tilde[gv.a_dim:2*gv.a_dim]))
-        #print("xtilde", x_tilde)
+        #pdb.set_trace()
+        print("xtilde", x_tilde)
         return x_tilde
 
 #Task Estimator that receives auditory feedback
@@ -125,6 +128,9 @@ class TSE_LWPR_Hier(TSE_LWPR,TSEHierInterface):
         x_tilde = np.append(jac[0],np.matmul(jac[1],a_tilde[gv.a_dim:2*gv.a_dim]))
 
         X=seutil.sigmas(x_tilde,self.P,self.c) #sigma points around x tilde
+        if type(X) != np.ndarray:
+            pdb.set_trace()
+
         x1,X1,P1,X2 = self.TaskStatePredict(X,self.Wm,self.Wc,gv.x_dim*2,self.Q) #transformation of x_tilde (propagation)
 
         if self.feedbackType == 'nofeedback' or catch or i_frm < 10:
@@ -216,7 +222,7 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             self.TSP[i].tau_lambda = float(tse_configs['lwpr_tau_lambda'])
             self.TSP[i].final_lambda = float(tse_configs['lwpr_final_lambda'])
 
-        self.Aud_delay = 20 #later make this separate setting in the config file
+        self.Aud_delay = int(float(tse_configs['estimated_auditory_delay']) / 5) #20 #later make this separate setting in the config file
         #should be able to be configured differently from the real sensory delay 
 
         #self.X2_record = np.full([self.Aud_delay,gv.x_dim*2,29],np.nan)
@@ -244,6 +250,9 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
         #print(self.Taskmodel.predict(a_tilde[0:gv.a_dim]))
 
         X=seutil.sigmas(x_tilde,self.P,self.c) #sigma points around x tilde
+        #pdb.set_trace()
+        if type(X) != np.ndarray: # Cholesky failed so move on to next trial
+            return None, None
         x1,X1,P1,X2 = self.TaskStatePredict(X,self.Wm,self.Wc,gv.x_dim*2,self.Q, xdotdot) #transformation of x_tilde (propagation)
         #print(x1)
         Y,y=seutil.TaskAuditoryPrediction(self.Aud_model,X1,self.Wm)
@@ -273,6 +282,7 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             #delay_X2 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.X2_record,axes=[1,0])[0]
             #delay_P1 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.P1_record,axes=[1,0])[0]
 
+            #print(self.R)
             Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R*50)
  
             #Y1,self.P = seutil.transformedDevandCov(self.Y_record[i_frm],y,self.Wc,self.R*4.5)
@@ -439,3 +449,20 @@ class TSE_LWPR_Hier_xdotdotJacUpdateDebug(TSE_LWPR_Hier_xdotdot):
         x_tilde = x
         #x_hat = x1
         return x_tilde, y[0:3]
+
+
+class TSE_LWPR_Hier_NoiseEst(TSE_LWPR_Hier_xdotdot):
+    def __init__(self,tse_configs,R_Auditory,R_Somato):
+        super().__init__(tse_configs,R_Auditory,R_Somato)
+        
+        Auditory_sensor_scale_est = float(tse_configs['Auditory_sensor_scale_est'])
+        nAuditory = int(tse_configs['nAuditory'])
+        norms_Auditory = util.string2dtype_array(tse_configs['norms_Auditory'], float)
+        norms_AADOT = util.string2dtype_array(tse_configs['norms_AADOT'], float)
+
+        R_Auditory_est = 1e0*Auditory_sensor_scale_est*np.ones(nAuditory)*norms_Auditory
+        self.R = np.diag(R_Auditory_est)
+        self.defR = self.R
+
+
+

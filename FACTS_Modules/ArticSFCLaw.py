@@ -12,6 +12,7 @@ import numpy as np
 import global_variables as gv
 from .util import scale,unscale,string2dtype_array
 from .LWPR_Model.lwpr import LWPR
+import pdb
 
 class ArticSFCLaw():
     def __init__(self):
@@ -68,19 +69,28 @@ class ArticSFCLaw_LWPR_noupdate(ArticSFCLaw):
         self.model = LWPR(artic_configs['model_path'])
 
     def run(self, xdotdot,a_tilde,ART,i_frm,PROMACT,ms_frm):
-        PROM_NEUT = get_prom_neut(ART,i_frm)
-        #a_tilde = a_tilde_record[i_frm]
-        NEUTACC,NULLACC = get_neutacc_nullacc(a_tilde)
-        jb = self.model.predict_J(a_tilde[0:gv.a_dim]) #LWPR jacobian
-        JNTACC_NULL, JAC, IPJAC = get_null_prj(ART,i_frm,PROMACT,jb,NULLACC)
-        #Jdot*adot
-        Jdot = (JAC-self.prejb)/(ms_frm/1000)
-        Jdotadot = np.matmul(Jdot,a_tilde[gv.a_dim:2*gv.a_dim])
-        self.prejb = JAC
-        #adotdot = fromtask + NullProj for stability + NeutralAtt for nonactive gestures
-        adotdot = np.matmul(IPJAC,xdotdot) - np.matmul(IPJAC,Jdotadot)  + JNTACC_NULL + np.multiply(PROM_NEUT,NEUTACC) 
-        #print("online: ",np.matmul(IPJAC,xdotdot))
-        return adotdot
+        if np.isnan(a_tilde).any():
+            return None 
+        try:
+            PROM_NEUT = get_prom_neut(ART,i_frm)
+            #a_tilde = a_tilde_record[i_frm]
+            NEUTACC,NULLACC = get_neutacc_nullacc(a_tilde)
+            jb = self.model.predict_J(a_tilde[0:gv.a_dim]) #LWPR jacobian
+
+            if True in [np.isnan(x).any() for x in jb] or True in [np.isneginf(x).any() for x in jb] or True in [np.isposinf(x).any() for x in jb]:
+                return None
+            JNTACC_NULL, JAC, IPJAC = get_null_prj(ART,i_frm,PROMACT,jb,NULLACC)
+            #Jdot*adot
+            Jdot = (JAC-self.prejb)/(ms_frm/1000)
+            Jdotadot = np.matmul(Jdot,a_tilde[gv.a_dim:2*gv.a_dim])
+            self.prejb = JAC
+            #adotdot = fromtask + NullProj for stability + NeutralAtt for nonactive gestures
+            adotdot = np.matmul(IPJAC,xdotdot) - np.matmul(IPJAC,Jdotadot)  + JNTACC_NULL + np.multiply(PROM_NEUT,NEUTACC) 
+            #print("online: ",np.matmul(IPJAC,xdotdot))
+            return adotdot
+        except Exception as e: 
+            print(e) 
+            pdb.set_trace()
 
     
 def get_prom_neut(ART,i_frm):

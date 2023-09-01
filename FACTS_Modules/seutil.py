@@ -129,7 +129,7 @@ def sigmas(x,P,c):
         Phat = (Phat + np.transpose(Phat))/2
         p = 1
         k = 0
-        while p != 0:
+        while p != 0 and k <= 10:
             R,p = chol(Phat)
             k = k + 1
             #print("k: ", k)
@@ -148,6 +148,8 @@ def sigmas(x,P,c):
                 Phat = Phat + (-mineig*(k**2) + np.spacing(mineig))*np.eye(np.size(P,0),np.size(P,1))
                 #print("Phat: ", Phat)
                 #print((-mineig*(k**2) + np.spacing(mineig)))
+        if k > 10:
+            return None
         P = Phat
 
     A = c*np.transpose(np.linalg.cholesky(P))

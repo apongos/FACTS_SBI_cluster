@@ -9,6 +9,8 @@
 from FACTS_Modules.TaskSFCLaw import TaskSFCLaw
 from FACTS_Modules.AcousticSynthesis import AcousticSynthesis
 import numpy as np
+import pdb
+np.set_printoptions(precision=12)
 
 def model_factory(config):
     if 'ModelArchitecture' in config.keys():
@@ -109,12 +111,18 @@ class Hierarchical_Model(Model):
     def ase_factory(self,model_configs,R_Auditory,R_Somato):
         if 'ArticStateEstimator' in model_configs.sections():
             model_type = model_configs['ArticStateEstimator']['model_type']
-            if model_type == 'lwpr':
-                from FACTS_Modules.ArticStateEstimator import ASE_UKF_Hier
-                artic_state_estimator = ASE_UKF_Hier(model_configs['ArticStateEstimator'],R_Auditory,R_Somato)
+            if model_type == 'lwpr':                
+                if 'Somato_sensor_scale_est' in model_configs['ArticStateEstimator']:
+                    from FACTS_Modules.ArticStateEstimator import ASE_UKF_Hier_NoiseEst
+                    artic_state_estimator = ASE_UKF_Hier_NoiseEst(model_configs['ArticStateEstimator'],R_Auditory,R_Somato)
+                    print('got the right ASE')
+                else:    
+                    from FACTS_Modules.ArticStateEstimator import ASE_UKF_Hier
+                    artic_state_estimator = ASE_UKF_Hier(model_configs['ArticStateEstimator'],R_Auditory,R_Somato)
         return artic_state_estimator
     
     def tse_factory(self,tse_configs,R_Auditory,R_Somato):
+        print('Inside the tse factory')
         model_type = tse_configs['model_type']
         #print('Task State Estimator Model Type: ', model_type)
         if model_type == 'lwpr':
@@ -167,36 +175,55 @@ class Hierarchical_xdotdot(Hierarchical_Model):
         model_type = tse_configs['model_type']
         #print('Task State Estimator Model Type: ', model_type)
         if model_type == 'lwpr':
-            from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Hier_xdotdot
-            task_state_estimator = TSE_LWPR_Hier_xdotdot(tse_configs,R_Auditory,R_Somato)
+            if 'Auditory_sensor_scale_est' in tse_configs:
+                from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Hier_NoiseEst
+                task_state_estimator = TSE_LWPR_Hier_NoiseEst(tse_configs,R_Auditory,R_Somato)
+                print('got the right TSE')
+            else:  
+                from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Hier_xdotdot
+                task_state_estimator = TSE_LWPR_Hier_xdotdot(tse_configs,R_Auditory,R_Somato)
         return task_state_estimator
      
     def run_one_timestep(self, x_tilde_delaywindow, a_tilde_delaywindow, prev_a_actual, somato_record, formant_record, GestScore, ART, ms_frm,i_frm, trial, catch):
         xdotdot, PROMACT = self.task_sfc_law.run(x_tilde_delaywindow[0],GestScore,i_frm)
         adotdot = self.artic_sfc_law.run(xdotdot, a_tilde_delaywindow[0],ART,i_frm,PROMACT,ms_frm)
-        a_actual = self.artic_kinematics.run(prev_a_actual,adotdot,ms_frm)
-        #print("a_actual",a_actual)
-        formants = self.acoustic_synthesis.run(a_actual)
-        #print("form",formants)
-        formants_shifted = self.auditory_perturbation.run(formants,i_frm,trial,catch)
-        formants_noise, somato_noise = self.sensory_system_noise.run(formants_shifted,a_actual)
-        formants_noise, somato_noise, formant_record, somato_record = self.sensory_system_delay.run(ms_frm, i_frm,formants_noise,somato_noise,formant_record,somato_record)
-        prev_a_tilde = a_tilde_delaywindow[0]
+        if type(adotdot) != np.ndarray:
+            formants_produced = np.array([-1, -1, -1], dtype= np.float32)
+            a_actual = [-10000,-10000,-10000]
+            y_hat = np.array([-1, -1, -1], dtype= np.float32)
+            return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced
+
+        try:
+            a_actual = self.artic_kinematics.run(prev_a_actual,adotdot,ms_frm)
+            #print("a_actual",a_actual)
+            formants = self.acoustic_synthesis.run(a_actual)
+            #print("Maeda output",formants)
+            formants_shifted = self.auditory_perturbation.run(formants,i_frm,trial,catch)
+            formants_noise, somato_noise = self.sensory_system_noise.run(formants_shifted,a_actual)
+            formants_noise, somato_noise, formant_record, somato_record = self.sensory_system_delay.run(ms_frm, i_frm,formants_noise,somato_noise,formant_record,somato_record)
+            prev_a_tilde = a_tilde_delaywindow[0]
+            
+            #print("x_tilde",x_tilde_record[i_frm])
+            #print("x_tilde",x_tilde_record[119])
+            a_tilde, a_hat = self.artic_state_estimator.run(a_tilde_delaywindow,adotdot,somato_noise,ms_frm,i_frm,catch)
+            #pdb.set_trace()
+            #print("i_frm",i_frm)
+            #print("atilde",a_tilde)
+            x_tilde, y_hat = self.task_state_estimator.run(a_tilde_delaywindow,formants_noise,i_frm,catch,xdotdot)
+            #print('y_hat', y_hat)
+
+            #print("form_hat",y_hat_record[i_frm+2])
+            #a_tilde_record[i_frm+1] = a_tilde 
+            #x_tilde_record[i_frm+1] = x_tilde
+            a_tilde_delaywindow = np.insert(a_tilde_delaywindow[0:-1,:],0,a_tilde,0) #add the most recent frame to 0 and remove the oldest frame.
+            x_tilde_delaywindow = np.insert(x_tilde_delaywindow[0:-1,:],0,x_tilde,0)
+            #print("estimator end----------------------------------------------------------------------------------------------")
+
+            formants_produced = formants
+            return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced
         
-        #print("x_tilde",x_tilde_record[i_frm])
-        #print("x_tilde",x_tilde_record[119])
-        a_tilde, a_hat = self.artic_state_estimator.run(a_tilde_delaywindow,adotdot,somato_noise,ms_frm,i_frm,catch)
-        #print("i_frm",i_frm)
-        #print("atilde",a_tilde)
-        x_tilde, y_hat = self.task_state_estimator.run(a_tilde_delaywindow,formants_noise,i_frm,catch,xdotdot)
-
-        #print("form_hat",y_hat_record[i_frm+2])
-        #a_tilde_record[i_frm+1] = a_tilde 
-        #x_tilde_record[i_frm+1] = x_tilde
-        a_tilde_delaywindow = np.insert(a_tilde_delaywindow[0:-1,:],0,a_tilde,0) #add the most recent frame to 0 and remove the oldest frame.
-        x_tilde_delaywindow = np.insert(x_tilde_delaywindow[0:-1,:],0,x_tilde,0)
-        #print("estimator end----------------------------------------------------------------------------------------------")
-
-        formants_produced = formants
-        return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced
-               
+        except:
+            formants_produced = np.array([-1, -1, -1], dtype= np.float32)
+            a_actual = [-10000,-10000,-10000]
+            y_hat = np.array([-1, -1, -1], dtype= np.float32)
+            return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced

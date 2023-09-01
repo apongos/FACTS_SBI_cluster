@@ -23,6 +23,8 @@ from FACTS_Modules.Model import model_factory
 from FACTS_Modules.util import string2dtype_array
 from FACTS_Modules.TADA import MakeGestScore
 from facts_visualizations import single_trial_plots, multi_trial_plots
+import pdb
+
 
 def main(argv):
     config = configparser.ConfigParser()
@@ -48,13 +50,13 @@ def main(argv):
     somato_record = np.full([last_frm+20,gv.a_dim*2], np.nan) #changed
     formant_record = np.full([last_frm+20,3], np.nan) #changed
     a_tilde_record = np.full([last_frm+20,gv.a_dim*2], np.nan) #changed
-    formant_produced_record = np.full([last_frm,3], np.nan)
+    formants_produced_record = np.full([last_frm,3], np.nan)
 
     x_tilde_record_alltrials = np.empty([ntrials,last_frm+20,gv.x_dim]) #changed
     somato_record_alltrials = np.full([ntrials,last_frm+20,gv.a_dim*2], np.nan) #changed
     formant_record_alltrials = np.full([ntrials,last_frm+20,3], np.nan) #changed
     shift_record_alltrials = np.full([ntrials,last_frm+20,3], np.nan) #changed
-    formant_produced_record_alltrials = np.full([ntrials,last_frm,3], np.nan)
+    formants_produced_record_alltrials = np.full([ntrials,last_frm,3], np.nan)
     
     a_tilde_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
     a_dot_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
@@ -90,19 +92,32 @@ def main(argv):
         for i_frm in range(last_frm): #gotta change this hardcoded number to aud delay later
             #model function runs FACTS by each frame
             x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced = model.run_one_timestep(x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, GestScore, ART, ms_frm, i_frm, trial, catch)
-            a_tilde_record[i_frm+1] = a_tilde_delaywindow[0,:] #0 is always the most recnet current frame
-            x_tilde_record[i_frm+1] = x_tilde_delaywindow[0,:] #0 is always the most recnet current frame
-            formants_produced_record[i_frm] = formants_produced
+            if (formants_produced == -1).all():
+                formants_produced_record[i_frm:] = [-1, -1, -1]
+                a_tilde_record[i_frm:] = np.tile(-10000, 12)
+                x_tilde_record[i_frm:] = np.tile(-10000, 14)
+                break
+            else:
+                a_tilde_record[i_frm+1] = a_tilde_delaywindow[0,:] #0 is always the most recnet current frame
+                x_tilde_record[i_frm+1] = x_tilde_delaywindow[0,:] #0 is always the most recnet current frame
+                formants_produced_record[i_frm] = formants_produced 
 
-           #save the FACTS results
-            
+        # Find where auditory pertubation happens an add buffer here
+        #aud_pert_onset = int(config['AudPerturbation']['PerturbOnsetFrame'])
+
+        # Add a delay buffer here
+        #delay_buffer_length = int(config['AudPerturbation']['AudDelay']) # In unit of frames
+        #delay_buffer = np.repeat([formants_produced_record[aud_pert_onset]], delay_buffer_length, axis=0)
+
+        #pdb.set_trace()
+        #formants_produced_record_with_delay =  np.vstack([formants_produced_record[:aud_pert_onset],  delay_buffer, formants_produced_record[aud_pert_onset:formants_produced_record.shape[0]-10]])
         
         predict_formant_record_alltrials[trial,] = y_hat
         #print(a_tilde_record.shape)
         #print(a_tilde_record_alltrials.shape)
         #print(a_tilde_record[:,0:gv.a_dim])
         #print("flipped",a_tilde_record[::-1,0:gv.a_dim])
-        formant_produced_record_alltrials[trial,] = formants_produced_record
+        formants_produced_record_alltrials[trial,] = formants_produced_record
 
         a_tilde_record_alltrials[trial,] = a_tilde_record[:,0:gv.a_dim]
         #a_dot_record[trial, ] = a_tilde[gv.a_dim:]
@@ -147,7 +162,7 @@ def main(argv):
 if __name__ == "__main__":
     #main(['DesignC_AUKF_nopertdelay.ini','GesturalScores/KimetalOnlinepert2.G']) #datafile_name: HierAUKFoc
 
-    main(['DesignC_AUKF_onlinepertdelay.ini','GesturalScores/KimetalOnlinepert2.G']) #datafile_name: HierAUKFoc
+    main(['DesignC_AUKF_onlinepertdelay_est_noise.ini','GesturalScores/KimetalOnlinepert2.G']) #datafile_name: HierAUKFoc
 
     #main(sys.argv[1:])
     #Fig 3

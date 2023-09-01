@@ -12,6 +12,8 @@ from .LWPR_Model.lwpr import LWPR
 import global_variables as gv
 from . import seutil
 from abc import ABC, abstractmethod
+from . import util
+import pdb
 
 class ASEClassicInterface:
     @abstractmethod
@@ -181,6 +183,7 @@ class ASE_UKF_Classic(ASE_UKF,ASEClassicInterface):
 
             #Y1 = trnasofrmed deviations, P = transformed covariance
             Y1,self.P = seutil.transformedDevandCov(Y,y,self.Wc,self.R)
+            #print(self.R)
             #save sensory error 
             #self.senmem = sensoryerrorsave(y,z,self.senmem,x1,i_frm)
 
@@ -245,6 +248,9 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         u = adotdot
         X=seutil.sigmas(x,self.P,self.c) #sigma points around x which are x (1) + x-A (12) and x+A (12) = 25. In other words, 2n + 1 when n = 12. 
         #x1,X1,P1,X2=ArticStatePredict(X,self.Wm,self.Wc,gv.a_dim*2,self.Q,u,ms_frm) #Articulatory State Prediction: unscented transformation of process
+        #pdb.set_trace()
+        if type(X) != np.ndarray:
+            return None, None
         x1,X1,P1,X2=seutil.ArticStatePredict_LWPR(X,self.Wm,self.Wc,gv.a_dim*2,self.Q,u,ms_frm,self.ASP)
         #rint("x1",x1)
         y=np.zeros(1)
@@ -304,6 +310,7 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
             #Y1 = trnasofrmed deviations, P = transformed covariance
             #Y1,self.P = seutil.transformedDevandCov(self.Y_record[9,],delay_y,self.Wc,self.R*2)
             Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R)
+            #print(self.R)
             #save sensory error 
             #self.senmem = sensoryerrorsave(y,z,self.senmem,x1,i_frm)
 
@@ -336,6 +343,8 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         u = self.u_record[pst_frm]
         X=seutil.sigmas(delay_x,delay_P,self.c) #sigma points around x which are x (1) + x-A (12) and x+A (12) = 25. In other words, 2n + 1 when n = 12. 
         #x1,X1,P1,X2=ArticStatePredict(X,self.Wm,self.Wc,gv.a_dim*2,self.Q,u,ms_frm) #Articulatory State Prediction: unscented transformation of process
+        if type(X) != np.ndarray:
+            return None, None
         x1,X1,rec_P1,X2=seutil.ArticStatePredict_LWPR(X,self.Wm,self.Wc,gv.a_dim*2,self.Q,u,ms_frm,self.ASP)
         
         y=np.zeros(1)
@@ -357,3 +366,21 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
             return x, delay_P
         else:
             return self.run_recursive_calc(x,delay_P,pst_frm-1,ms_frm)
+
+
+class ASE_UKF_Hier_NoiseEst(ASE_UKF_Hier, ASEHierInterface):
+    def __init__(self,articstateest_configs,R_Auditory,R_Somato):
+        super().__init__(articstateest_configs,R_Auditory,R_Somato)
+
+        Somato_sensor_scale_est = float(articstateest_configs['Somato_sensor_scale_est'])
+        norms_AADOT =  util.string2dtype_array(articstateest_configs['norms_AADOT'], float)
+        R_Somato_est = 1e0*Somato_sensor_scale_est*np.ones(gv.a_dim*2)*norms_AADOT
+        print(R_Somato_est)
+        self.R = np.diag(R_Somato_est)
+
+
+
+
+
+
+
