@@ -218,7 +218,7 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         super().__init__(articstateest_configs,R_Auditory,R_Somato)
         # compute R (measurement noise covariance matrix)
         self.R = np.diag(R_Somato)
-        self.Somat_delay = 10 #later make this separate setting in the config file
+        self.Somat_delay = int(float(articstateest_configs['estimated_somat_delay']) / 5)  #10 #later make this separate setting in the config file
         self.defP = self.P
         self.X2_record = np.full([self.Somat_delay,gv.a_dim*2,25],np.nan)
         self.P1_record = np.full([self.Somat_delay,gv.a_dim*2,gv.a_dim*2],np.nan)

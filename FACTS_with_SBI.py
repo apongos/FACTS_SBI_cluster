@@ -37,10 +37,12 @@ def simulator(theta):
             config['TaskStateEstimator']['covariance_scale'] = str(theta[0][3].item())
             config['ArticStateEstimator']['process_scale'] = str(theta[0][4].item())
             config['ArticStateEstimator']['covariance_scale'] = str(theta[0][5].item())
+            
             config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[0][6].item())
+            config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[0][7].item())
 
-            config['SensoryDelay']['Auditory_delay'] = str(theta[0][7].item())
-            config['SensoryDelay']['Somato_delay'] = str(theta[0][8].item())
+            config['SensoryDelay']['Auditory_delay'] = str(theta[0][8].item())
+            config['SensoryDelay']['Somato_delay'] = str(theta[0][9].item())
             
         else:
             #pdb.set_trace()
@@ -51,10 +53,12 @@ def simulator(theta):
             config['TaskStateEstimator']['covariance_scale'] = str(theta[3].item())
             config['ArticStateEstimator']['process_scale'] = str(theta[4].item())
             config['ArticStateEstimator']['covariance_scale'] = str(theta[5].item())
+            
             config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[6].item())
+            config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[7].item())
 
-            config['SensoryDelay']['Auditory_delay'] = str(theta[7].item())
-            config['SensoryDelay']['Somato_delay'] = str(theta[8].item())
+            config['SensoryDelay']['Auditory_delay'] = str(theta[8].item())
+            config['SensoryDelay']['Somato_delay'] = str(theta[9].item())
     except:
         pdb.set_trace()
 
