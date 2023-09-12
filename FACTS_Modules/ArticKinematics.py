@@ -18,7 +18,10 @@ import numpy as np
 
 class ArticKinematics():
     def run(self, prev_a_actual, adotdot, ms_frm):
-        a = solve_ivp(fun=lambda t, y: ode45_dim6(t,y,adotdot), 
+        # if np.isnan(adotdot):
+        #     pdb.set_trace()
+        #pdb.set_trace()
+        a = solve_ivp(fun=lambda t, y: ode45_dim6(t,y,adotdot), max_step = 1000000,
                       t_span=[0, ms_frm/1000], y0=prev_a_actual, method='RK45', 
                       dense_output=True, rtol=1e-13, atol=1e-22).y[:,-1]
         return a

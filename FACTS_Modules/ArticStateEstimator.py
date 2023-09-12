@@ -218,7 +218,8 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         super().__init__(articstateest_configs,R_Auditory,R_Somato)
         # compute R (measurement noise covariance matrix)
         self.R = np.diag(R_Somato)
-        self.Somat_delay = int(float(articstateest_configs['estimated_somat_delay']) / 5)  #10 #later make this separate setting in the config file
+        #self.Somat_delay = int(float(articstateest_configs['estimated_somat_delay']) / 5)  #10 #later make this separate setting in the config file
+        self.Somat_delay = int(float(articstateest_configs['Somato_delay']) / 5)
         self.defP = self.P
         self.X2_record = np.full([self.Somat_delay,gv.a_dim*2,25],np.nan)
         self.P1_record = np.full([self.Somat_delay,gv.a_dim*2,gv.a_dim*2],np.nan)
@@ -327,7 +328,7 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
             x1 = x
             #print(delay_P)
             self.P = delay_P
-        
+
         if self.learn:
             x = x1
             self.P = self.defP
@@ -337,8 +338,8 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         return a_tilde, a_hat
         
     def run_recursive_calc(self,delay_x,delay_P,pst_frm,ms_frm):
-        #print("pst_frm",pst_frm)
-        #print(self.u_record[pst_frm])
+        # print("pst_frm",pst_frm)
+        # print(self.u_record[pst_frm])
         
         u = self.u_record[pst_frm]
         X=seutil.sigmas(delay_x,delay_P,self.c) #sigma points around x which are x (1) + x-A (12) and x+A (12) = 25. In other words, 2n + 1 when n = 12. 
@@ -375,7 +376,7 @@ class ASE_UKF_Hier_NoiseEst(ASE_UKF_Hier, ASEHierInterface):
         Somato_sensor_scale_est = float(articstateest_configs['Somato_sensor_scale_est'])
         norms_AADOT =  util.string2dtype_array(articstateest_configs['norms_AADOT'], float)
         R_Somato_est = 1e0*Somato_sensor_scale_est*np.ones(gv.a_dim*2)*norms_AADOT
-        print(R_Somato_est)
+        #print(R_Somato_est)
         self.R = np.diag(R_Somato_est)
 
 

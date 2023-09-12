@@ -222,7 +222,8 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             self.TSP[i].tau_lambda = float(tse_configs['lwpr_tau_lambda'])
             self.TSP[i].final_lambda = float(tse_configs['lwpr_final_lambda'])
 
-        self.Aud_delay = int(float(tse_configs['estimated_auditory_delay']) / 5) #20 #later make this separate setting in the config file
+        #self.Aud_delay = int(float(tse_configs['estimated_auditory_delay']) / 5) #20 #later make this separate setting in the config file
+        self.Aud_delay = int(float(tse_configs['Auditory_delay']) / 5) 
         #should be able to be configured differently from the real sensory delay 
 
         #self.X2_record = np.full([self.Aud_delay,gv.x_dim*2,29],np.nan)
@@ -437,7 +438,7 @@ class TSE_LWPR_Hier_xdotdotJacUpdateDebug(TSE_LWPR_Hier_xdotdot):
                     DeltaX, DeltaCov = seutil.StateCorrection(X2*self.AUKFmultFactor[0],self.Wc,Y1,obscov,z,y) #commented 052522
                     self.Q = self.defQ*self.AUKFmultFactor[1] #commented 052522
                     self.P = self.defP*self.AUKFmultFactor[2] #commented 052522
-                    print(DeltaX)
+                    #print(DeltaX)
                 else:
                     print("AUKF off")
                     self.P = self.defP

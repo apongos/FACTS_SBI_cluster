@@ -87,10 +87,11 @@ def main(argv):
 
         if trial in catch_trials: catch = catch_types[np.where(catch_trials==trial)[0][0]]
         else: catch = False
-        print("catch:", catch)
+        #print("catch:", catch)
         
         for i_frm in range(last_frm): #gotta change this hardcoded number to aud delay later
             #model function runs FACTS by each frame
+            #print('i_frm', i_frm)
             x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced = model.run_one_timestep(x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, GestScore, ART, ms_frm, i_frm, trial, catch)
             if (formants_produced == -1).all():
                 formants_produced_record[i_frm:] = [-1, -1, -1]
@@ -162,7 +163,7 @@ def main(argv):
 if __name__ == "__main__":
     #main(['DesignC_AUKF_nopertdelay.ini','GesturalScores/KimetalOnlinepert2.G']) #datafile_name: HierAUKFoc
 
-    main(['DesignC_AUKF_onlinepertdelay_est_noise.ini','GesturalScores/KimetalOnlinepert2.G']) #datafile_name: HierAUKFoc
+    main(['DesignC_AUKF_onlinepertdelay_SBI.ini','GesturalScores/KimetalOnlinepert2.G']) #datafile_name: HierAUKFoc
 
     #main(sys.argv[1:])
     #Fig 3

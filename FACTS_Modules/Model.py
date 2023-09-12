@@ -115,14 +115,14 @@ class Hierarchical_Model(Model):
                 if 'Somato_sensor_scale_est' in model_configs['ArticStateEstimator']:
                     from FACTS_Modules.ArticStateEstimator import ASE_UKF_Hier_NoiseEst
                     artic_state_estimator = ASE_UKF_Hier_NoiseEst(model_configs['ArticStateEstimator'],R_Auditory,R_Somato)
-                    print('got the right ASE')
+                    #print('got the right ASE')
                 else:    
                     from FACTS_Modules.ArticStateEstimator import ASE_UKF_Hier
                     artic_state_estimator = ASE_UKF_Hier(model_configs['ArticStateEstimator'],R_Auditory,R_Somato)
         return artic_state_estimator
     
     def tse_factory(self,tse_configs,R_Auditory,R_Somato):
-        print('Inside the tse factory')
+        #print('Inside the tse factory')
         model_type = tse_configs['model_type']
         #print('Task State Estimator Model Type: ', model_type)
         if model_type == 'lwpr':
@@ -178,7 +178,7 @@ class Hierarchical_xdotdot(Hierarchical_Model):
             if 'Auditory_sensor_scale_est' in tse_configs:
                 from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Hier_NoiseEst
                 task_state_estimator = TSE_LWPR_Hier_NoiseEst(tse_configs,R_Auditory,R_Somato)
-                print('got the right TSE')
+                #print('got the right TSE')
             else:  
                 from FACTS_Modules.TaskStateEstimator import TSE_LWPR_Hier_xdotdot
                 task_state_estimator = TSE_LWPR_Hier_xdotdot(tse_configs,R_Auditory,R_Somato)
@@ -187,7 +187,7 @@ class Hierarchical_xdotdot(Hierarchical_Model):
     def run_one_timestep(self, x_tilde_delaywindow, a_tilde_delaywindow, prev_a_actual, somato_record, formant_record, GestScore, ART, ms_frm,i_frm, trial, catch):
         xdotdot, PROMACT = self.task_sfc_law.run(x_tilde_delaywindow[0],GestScore,i_frm)
         adotdot = self.artic_sfc_law.run(xdotdot, a_tilde_delaywindow[0],ART,i_frm,PROMACT,ms_frm)
-        if type(adotdot) != np.ndarray:
+        if type(adotdot) != np.ndarray or any(np.isnan(adotdot)):
             formants_produced = np.array([-1, -1, -1], dtype= np.float32)
             a_actual = [-10000,-10000,-10000]
             y_hat = np.array([-1, -1, -1], dtype= np.float32)

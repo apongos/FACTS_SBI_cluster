@@ -13,14 +13,14 @@ import os
 import pdb
 #import seaborn as sns
 
-from sbi.inference import infer
+from sbi.inference import infer, SNPE, prepare_for_sbi, simulate_for_sbi
 from sbi import utils as utils
 import pickle
 import scipy.io
 
 
 def simulator(theta):
-    ini='DesignC_AUKF_onlinepertdelay_est_noise.ini'
+    ini='DesignC_AUKF_onlinepertdelay_SBI.ini'
     gFile='GesturalScores/KimetalOnlinepert2.G'
     config = configparser.ConfigParser()
     config.read(ini)
@@ -29,6 +29,7 @@ def simulator(theta):
     #pdb.set_trace()
     try:
         if theta.dim() > 1:
+#             pdb.set_trace()
             #print(theta.numel())
             config['SensoryNoise']['Auditory_sensor_scale'] = str(theta[0][0].item())
             config['SensoryNoise']['Somato_sensor_scale'] = str(theta[0][1].item())
@@ -37,12 +38,12 @@ def simulator(theta):
             config['TaskStateEstimator']['covariance_scale'] = str(theta[0][3].item())
             config['ArticStateEstimator']['process_scale'] = str(theta[0][4].item())
             config['ArticStateEstimator']['covariance_scale'] = str(theta[0][5].item())
-            
-            config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[0][6].item())
-            config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[0][7].item())
 
-            config['SensoryDelay']['Auditory_delay'] = str(theta[0][8].item())
-            config['SensoryDelay']['Somato_delay'] = str(theta[0][9].item())
+            config['SensoryDelay']['Auditory_delay'] = str(theta[0][6].item())
+            config['SensoryDelay']['Somato_delay'] = str(theta[0][7].item())
+            
+#             config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[0][6].item())
+#             config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[0][7].item())
             
         else:
             #pdb.set_trace()
@@ -53,12 +54,12 @@ def simulator(theta):
             config['TaskStateEstimator']['covariance_scale'] = str(theta[3].item())
             config['ArticStateEstimator']['process_scale'] = str(theta[4].item())
             config['ArticStateEstimator']['covariance_scale'] = str(theta[5].item())
-            
-            config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[6].item())
-            config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[7].item())
 
-            config['SensoryDelay']['Auditory_delay'] = str(theta[8].item())
-            config['SensoryDelay']['Somato_delay'] = str(theta[9].item())
+            config['SensoryDelay']['Auditory_delay'] = str(theta[6].item())
+            config['SensoryDelay']['Somato_delay'] = str(theta[7].item())
+            
+#             config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[6].item())
+#             config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[7].item())
     except:
         pdb.set_trace()
 
@@ -128,11 +129,15 @@ def simulator(theta):
         for i_frm in range(last_frm): #gotta change this hardcoded number to aud delay later
             #model function runs FACTS by each frame
             x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced = model.run_one_timestep(x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, GestScore, ART, ms_frm, i_frm, trial, catch)
-            a_tilde_record[i_frm+1] = a_tilde_delaywindow[0,:] #0 is always the most recnet current frame
-            x_tilde_record[i_frm+1] = x_tilde_delaywindow[0,:] #0 is always the most recnet current frame
-            formants_produced_record[i_frm] = formants_produced
-            #pdb.set_trace()
-           #save the FACTS results
+            if (formants_produced == -1).all():
+                formants_produced_record[i_frm:] = [-1, -1, -1]
+                a_tilde_record[i_frm:] = np.tile(-10000, 12)
+                x_tilde_record[i_frm:] = np.tile(-10000, 14)
+                break
+            else:
+                a_tilde_record[i_frm+1] = a_tilde_delaywindow[0,:] #0 is always the most recnet current frame
+                x_tilde_record[i_frm+1] = x_tilde_delaywindow[0,:] #0 is always the most recnet current frame
+                formants_produced_record[i_frm] = formants_produced 
             
         
         predict_formant_record_alltrials[trial,] = y_hat
@@ -153,10 +158,10 @@ def simulator(theta):
     #pdb.set_trace()
     return formants_produced_record_alltrials[:,:,0].squeeze() 
 
-def main(num_sim, num_workers):
+def main(num_sim, num_workers, load_and_train):
 
-    print(os.getcwd())
-    print(os.listdir(os.curdir))
+    #print(os.getcwd())
+    #print(os.listdir(os.curdir))
 
     # If environment variables are passed, use them
     if os.environ.get('ENV_NUM_WORKERS') is not None:
@@ -184,22 +189,61 @@ def main(num_sim, num_workers):
     # Low - .002
     # import your simulator, define your prior over the parameters
     #prior_mean = 0.002
-    prior_min= [0.0001, 0.002]
-    prior_mmax = [0.04, 1.0] 
+    prior_min= [0.0001, 0.002, 0.0001, 0.0000001, 10e-12, 10e-12, 20, 20]
+    prior_mmax = [0.04, 1.0, 5, 5, 10e-6, 10e-4, 105, 105] 
     #num_sim = 100000
 
     # prior = torch.distributions.Uniform(torch.as_tensor(mmin), torch.as_tensor(mmax) )
-    if load_instead == False:
-        prior = utils.torchutils.BoxUniform(torch.as_tensor(prior_min), torch.as_tensor(prior_mmax) )
-        parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
-        with open(sing_path+f'/sbi_resources/output/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
-            pickle.dump([parameter_posterior], f)
+    prior = utils.torchutils.BoxUniform(torch.as_tensor(prior_min), torch.as_tensor(prior_mmax) )
+    simulator2, prior = prepare_for_sbi(simulator, prior)
+    inference = SNPE(prior)
+
+    if not load_and_train:
+
+        inference = SNPE(prior)
+        
+        theta, x = simulate_for_sbi(simulator2, proposal=prior, num_simulations=num_sim, num_workers=num_workers)
+        #parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
+        density_estimator = inference.append_simulations(theta, x).train()
+        posterior = inference.build_posterior(density_estimator)
+        
+        # Save the theta and x
+        with open(f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+            pickle.dump([theta, x], f)
+        # Save the posterior
+        with open(f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+            pickle.dump([posterior], f)
         
     else:
-        file = open(sing_path+f'/sbi_resources/output/ModelC_auditory_soma_noise_posterior_{num_sim}.pkl', 'rb')
-        object_file = pickle.load(file)
-        parameter_posterior = object_file[0]
-        file.close()
+        with open(load_and_train, 'rb') as f:  # Python 3: open(..., 'wb')
+            object_file = pickle.load(f)
+            theta2, x2 = object_file
+                
+            # Run more simulations
+            theta3, x3 = simulate_for_sbi(simulator2, proposal=prior, num_simulations=num_sim, num_workers=num_workers)
+            
+            # Append 
+            theta4 = torch.cat((theta2, theta3))
+            x4 = torch.cat((x2, x3))
+            
+            density_estimator = inference.append_simulations(theta4, x4).train(force_first_round_loss=True) # Look more into force_first_round_loss=True
+            posterior2 = inference.build_posterior(density_estimator)
+
+            # Save
+            new_num_simulation = int(find_between( load_and_train, 'theta_x_', '.pkl' ))+num_sim
+            with open(f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
+                pickle.dump([theta4, x4], f2)
+                # Save the posterior
+            with open(f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_posterior_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
+                pickle.dump([posterior2], f2)
+
+def find_between( s, first, last ):
+    try:
+        start = s.index( first ) + len( first )
+        end = s.index( last, start )
+        return s[start:end]
+    except ValueError:
+        return ""
 
 if __name__ == '__main__':
     import argparse
@@ -210,7 +254,10 @@ if __name__ == '__main__':
                         help='number of simulations')
     parser.add_argument('--num_workers', type=int, required=False, default=4,
                         help='number of cores to use')
+    parser.add_argument('--load_and_train', type=str, required=False, default=None,
+                        help='file name of pickle file that contains SBIs theta and x on top of which you can run more simulate. Example ./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_1000.pkl')
+
     args = parser.parse_args()
-    main(num_sim=args.num_sim, num_workers=args.num_workers)
+    main(num_sim=args.num_sim, num_workers=args.num_workers, load_and_train=args.load_and_train)
 
 
