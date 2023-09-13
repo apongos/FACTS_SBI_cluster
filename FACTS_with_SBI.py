@@ -170,9 +170,9 @@ def main(num_sim, num_workers, load_and_train):
         num_sim = int(os.environ.get('ENV_NUM_SIMULATIONS'))
 
     # Import real observed data
-    sing_path = './' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
-    trial_cells_times = scipy.io.loadmat(sing_path+'/sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
-    trial_cells_mat = scipy.io.loadmat(sing_path+'/sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
+    singularity_path = '/home/FACTS' #'./' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
+    trial_cells_times = scipy.io.loadmat(singularity_path+'/sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
+    trial_cells_mat = scipy.io.loadmat(singularity_path+'/sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
     trial_cells_times = trial_cells_times[:,0:150]
     trial_cells_mat = trial_cells_mat[:,0:150]
 
@@ -208,14 +208,14 @@ def main(num_sim, num_workers, load_and_train):
         posterior = inference.build_posterior(density_estimator)
         
         # Save the theta and x
-        with open(f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        with open(singularity_path+f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([theta, x], f)
         # Save the posterior
-        with open(f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        with open(singularity_path+f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([posterior], f)
         
     else:
-        with open(load_and_train, 'rb') as f:  # Python 3: open(..., 'wb')
+        with open(singularity_path + '/' + load_and_train, 'rb') as f:  # Python 3: open(..., 'wb')
             object_file = pickle.load(f)
             theta2, x2 = object_file
                 
