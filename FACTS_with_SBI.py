@@ -171,13 +171,13 @@ def main(num_sim, num_workers, load_and_train):
 
     # Import real observed data
     singularity_path = '/home/FACTS' #'./' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
-    trial_cells_times = scipy.io.loadmat(singularity_path+'/sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
-    trial_cells_mat = scipy.io.loadmat(singularity_path+'/sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
-    trial_cells_times = trial_cells_times[:,0:150]
-    trial_cells_mat = trial_cells_mat[:,0:150]
+    # trial_cells_times = scipy.io.loadmat(singularity_path+'/sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
+    # trial_cells_mat = scipy.io.loadmat(singularity_path+'/sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
+    # trial_cells_times = trial_cells_times[:,0:150]
+    # trial_cells_mat = trial_cells_mat[:,0:150]
 
     # Alter the trial_cells so that they center to where FACTS centers
-    trial_cells_mat = trial_cells_mat + 531
+    #trial_cells_mat = trial_cells_mat + 531
 
     load_instead = False
 
