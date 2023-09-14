@@ -160,8 +160,8 @@ def simulator(theta):
 
 def main(num_sim, num_workers, load_and_train):
 
-    #print(os.getcwd())
-    #print(os.listdir(os.curdir))
+    print(os.getcwd())
+    print(os.listdir(os.curdir))
 
     # If environment variables are passed, use them
     if os.environ.get('ENV_NUM_WORKERS') is not None:
