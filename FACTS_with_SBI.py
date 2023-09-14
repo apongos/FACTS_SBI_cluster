@@ -208,10 +208,10 @@ def main(num_sim, num_workers, load_and_train):
         posterior = inference.build_posterior(density_estimator)
         
         # Save the theta and x
-        with open(singularity_path+f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([theta, x], f)
         # Save the posterior
-        with open(singularity_path+f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([posterior], f)
         
     else:
@@ -231,10 +231,10 @@ def main(num_sim, num_workers, load_and_train):
 
             # Save
             new_num_simulation = int(find_between( load_and_train, 'theta_x_', '.pkl' ))+num_sim
-            with open(f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
+            with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
                 pickle.dump([theta4, x4], f2)
                 # Save the posterior
-            with open(f'./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_posterior_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
+            with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_posterior_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
                 pickle.dump([posterior2], f2)
 
 def find_between( s, first, last ):
