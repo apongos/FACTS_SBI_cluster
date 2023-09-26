@@ -168,6 +168,8 @@ def main(num_sim, num_workers, load_and_train):
         num_workers = int(os.environ.get('ENV_NUM_WORKERS'))
     if os.environ.get('ENV_NUM_SIMULATIONS') is not None:
         num_sim = int(os.environ.get('ENV_NUM_SIMULATIONS'))
+    if os.environ.get('ENV_LOAD_AND_TRAIN') is not None:
+        load_and_train = os.environ.get('ENV_LOAD_AND_TRAIN')
 
     # Import real observed data
     singularity_path = '/home/FACTS' #'./' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
