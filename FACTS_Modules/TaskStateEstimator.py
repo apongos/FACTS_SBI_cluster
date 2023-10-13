@@ -224,6 +224,7 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
 
         #self.Aud_delay = int(float(tse_configs['estimated_auditory_delay']) / 5) #20 #later make this separate setting in the config file
         self.Aud_delay = int(float(tse_configs['Auditory_delay']) / 5) 
+        self.cc_reduction_from_delay = int(float(tse_configs['cc_reduction_from_delay']))
         #should be able to be configured differently from the real sensory delay 
 
         #self.X2_record = np.full([self.Aud_delay,gv.x_dim*2,29],np.nan)
@@ -265,6 +266,7 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
         #self.P1_record = np.vstack((P1[None],self.P1_record[0:-1,:]))
         self.Y_record = np.vstack((Y[None],self.Y_record[0:-1,:]))
         self.y_record = np.vstack((y[None],self.y_record[0:-1,:]))
+        #pdb.set_trace()
         
         if np.isnan(z[0]):
             x = x1
@@ -284,14 +286,16 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             #delay_P1 =  np.tensordot(self.h_delay[:, np.newaxis].T, self.P1_record,axes=[1,0])[0]
 
             #print(self.R)
-            Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R*50)
+            Y1,self.P = seutil.transformedDevandCov(delay_Y,delay_y,self.Wc,self.R)
  
             #Y1,self.P = seutil.transformedDevandCov(self.Y_record[i_frm],y,self.Wc,self.R*4.5)
             #save sensory error 
             #self.senmem = sensoryerrorsave(y,z,self.senmem,x1,i_frm)
             obscov = self.P
+            #pdb.set_trace()
             #StateCorrection and Eq 5 and 6
-            DeltaX, DeltaCov = seutil.StateCorrection(X2,self.Wc,Y1,self.P,z,delay_y)
+            #print(f'cc_reduction_from_delay {self.cc_reduction_from_delay}')
+            DeltaX, DeltaCov = seutil.StateCorrectionForDelay(X2,self.Wc,Y1,self.P,z,delay_y, self.cc_reduction_from_delay)
             
             #StateUpdate Eq 7, 
             x = x1 + DeltaX

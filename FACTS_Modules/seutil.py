@@ -288,11 +288,22 @@ def SomatosensoryPrediction(feedbackType,LWPRsom,org_Y,org_y,X1,Wm):
         
     #return Y,y
 
-def StateCorrection(X2,Wc,Y1,P,z,y):
+def StateCorrectionForDelay(X2,Wc,Y1,P,z,y, cc_reduction_from_delay):
     #Kalman gain calculation
-    P12=np.matmul(np.matmul(X2,np.diag(Wc)),Y1.T)  #transformed cross-covariance
+    P12=np.matmul(np.matmul(X2,np.diag(Wc)),Y1.T) / cc_reduction_from_delay #transformed cross-covariance
     K=np.matmul(P12,np.linalg.inv(P))
     #print("predict",z[0:3])
     #print("sensory",y[0:3])
     #print("K: ", K)
     return np.matmul(K,z-y),np.matmul(K,P12.T)  #Kalman*prediction error (Eq 5 and/or 6) and covariance update
+
+def StateCorrection(X2,Wc,Y1,P,z,y):
+    #Kalman gain calculation
+    P12=np.matmul(np.matmul(X2,np.diag(Wc)),Y1.T) #transformed cross-covariance
+    K=np.matmul(P12,np.linalg.inv(P))
+    #print("predict",z[0:3])
+    #print("sensory",y[0:3])
+    #print("K: ", K)
+    return np.matmul(K,z-y),np.matmul(K,P12.T)  #Kalman*prediction error (Eq 5 and/or 6) and covariance update
+
+
