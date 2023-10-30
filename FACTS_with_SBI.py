@@ -24,7 +24,7 @@ def simulator(theta):
     gFile='GesturalScores/KimetalOnlinepert2.G'
     config = configparser.ConfigParser()
     config.read(ini)
-
+    # print('DEBUGG')
     # Replace the parameter value from ini file
     #pdb.set_trace()
     try:
@@ -41,8 +41,8 @@ def simulator(theta):
 
             config['SensoryDelay']['Auditory_delay'] = str(theta[0][6].item())
             config['SensoryDelay']['Somato_delay'] = str(theta[0][7].item())
-            config['TaskStateEstimator']['cc_reduction_from_delay'] = str(theta[0][8].item())
-            
+            config['TaskStateEstimator']['cc_discount_from_delay'] = str(theta[0][8].item())
+
 #             config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[0][6].item())
 #             config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[0][7].item())
             
@@ -58,8 +58,14 @@ def simulator(theta):
 
             config['SensoryDelay']['Auditory_delay'] = str(theta[6].item())
             config['SensoryDelay']['Somato_delay'] = str(theta[7].item())
-            config['TaskStateEstimator']['cc_reduction_from_delay'] = str(theta[8].item())
-            
+            config['TaskStateEstimator']['cc_discount_from_delay'] = str(theta[8].item())
+
+        # Note from Alvince, need to pass this in   
+        config['TaskStateEstimator']['Auditory_delay']  = config['SensoryDelay']['Auditory_delay'] 
+        config['ArticStateEstimator']['Somato_delay']  = config['SensoryDelay']['Somato_delay'] 
+
+        # Note from Alvince, need to pass this in  for TSE    
+        # config['TaskStateEstimator']['Auditory_delay']  = config['SensoryDelay']['Auditory_delay'] 
 #             config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[6].item())
 #             config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[7].item())
     except:
@@ -80,27 +86,31 @@ def simulator(theta):
     GestScore, ART, ms_frm, last_frm = MakeGestScore(gFile,target_noise)
     
     # initialize vectors to monitor position at each timestep
-    x_tilde_delaywindow = np.full([20,gv.x_dim*2], np.nan) #a new variable that state estimators will have a partial access to
-    a_tilde_delaywindow = np.full([20,gv.a_dim*2], np.nan) #a new variable that state estimators will have a partial access to
+    buffer_size_auditory = int(float(config['SensoryDelay']['Auditory_delay']) / 5)  # default used to be 20
+    buffer_size_somato = int(float(config['SensoryDelay']['Somato_delay']) / 5)
+    buffer_size = max(buffer_size_auditory, buffer_size_somato)
+    
+    x_tilde_delaywindow = np.full([buffer_size,gv.x_dim*2], np.nan) #a new variable that state estimators will have a partial access to
+    a_tilde_delaywindow = np.full([buffer_size,gv.a_dim*2], np.nan) #a new variable that state estimators will have a partial access to
 
 
-    x_tilde_record = np.full([last_frm+20,gv.x_dim*2], np.nan) #changed
-    somato_record = np.full([last_frm+20,gv.a_dim*2], np.nan) #changed
-    formant_record = np.full([last_frm+20,3], np.nan) #changed
-    a_tilde_record = np.full([last_frm+20,gv.a_dim*2], np.nan) #changed
+    x_tilde_record = np.full([last_frm+buffer_size,gv.x_dim*2], np.nan) #changed
+    somato_record = np.full([last_frm+buffer_size,gv.a_dim*2], np.nan) #changed
+    formant_record = np.full([last_frm+buffer_size,3], np.nan) #changed
+    a_tilde_record = np.full([last_frm+buffer_size,gv.a_dim*2], np.nan) #changed
     formants_produced_record = np.full([last_frm,3], np.nan)
 
-    x_tilde_record_alltrials = np.empty([ntrials,last_frm+20,gv.x_dim]) #changed
-    somato_record_alltrials = np.full([ntrials,last_frm+20,gv.a_dim*2], np.nan) #changed
-    formant_record_alltrials = np.full([ntrials,last_frm+20,3], np.nan) #changed
-    shift_record_alltrials = np.full([ntrials,last_frm+20,3], np.nan) #changed
+    x_tilde_record_alltrials = np.empty([ntrials,last_frm+buffer_size,gv.x_dim]) #changed
+    somato_record_alltrials = np.full([ntrials,last_frm+buffer_size,gv.a_dim*2], np.nan) #changed
+    formant_record_alltrials = np.full([ntrials,last_frm+buffer_size,3], np.nan) #changed
+    shift_record_alltrials = np.full([ntrials,last_frm+buffer_size,3], np.nan) #changed
     formants_produced_record_alltrials = np.full([ntrials,last_frm,3], np.nan)
 
     
-    a_tilde_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
-    a_dot_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
-    a_dotdot_record_alltrials = np.empty([ntrials,last_frm+20,gv.a_dim])
-    predict_formant_record_alltrials = np.empty([ntrials,last_frm+20,3])
+    a_tilde_record_alltrials = np.empty([ntrials,last_frm+buffer_size,gv.a_dim])
+    a_dot_record_alltrials = np.empty([ntrials,last_frm+buffer_size,gv.a_dim])
+    a_dotdot_record_alltrials = np.empty([ntrials,last_frm+buffer_size,gv.a_dim])
+    predict_formant_record_alltrials = np.empty([ntrials,last_frm+buffer_size,3])
 
     #Check if catch trials (no perturbation) are specified in the config file
     if 'CatchTrials' in config.keys():
@@ -205,7 +215,7 @@ def main(num_sim, num_workers, load_and_train):
     if not load_and_train:
 
         inference = SNPE(prior)
-        
+        print(f'{num_sim}, {num_workers}, {load_and_train}')
         theta, x = simulate_for_sbi(simulator2, proposal=prior, num_simulations=num_sim, num_workers=num_workers)
         #parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
         density_estimator = inference.append_simulations(theta, x).train()
@@ -255,9 +265,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Peroform SBI on FACTS parameters')
 
-    parser.add_argument('--num_sim', type=int, required=False, default=8,
+    parser.add_argument('--num_sim', type=int, required=False, default=10,
                         help='number of simulations')
-    parser.add_argument('--num_workers', type=int, required=False, default=4,
+    parser.add_argument('--num_workers', type=int, required=False, default=2,
                         help='number of cores to use')
     parser.add_argument('--load_and_train', type=str, required=False, default=None,
                         help='file name of pickle file that contains SBIs theta and x on top of which you can run more simulate. Example ./sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_theta_x_1000.pkl')

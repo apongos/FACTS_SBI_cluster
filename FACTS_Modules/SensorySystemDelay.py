@@ -2,6 +2,7 @@
 #from .util import string2dtype_array
 #import numpy as np
 import global_variables as gv
+import pdb
 
 class SensorySystemDelay():
     def __init__(self,sensory_configs):
@@ -24,13 +25,17 @@ class SensorySystemDelay():
         #print(Somato_record.shape)
         #print(Auditory_record[5])
         #print(int(self.Auditory_sensor_delay/ms_frm))
-        Auditory_record[i_frm + int(self.Auditory_sensor_delay/ms_frm),] = Auditory_sense
-        Somato_record[i_frm + int(self.Somato_sensor_delay/ms_frm),] = Somato_sense
-        
-        Auditory_sense = Auditory_record[i_frm,]
-        Somato_sense = Somato_record[i_frm,]
+        try:
+            Auditory_record[i_frm + int(self.Auditory_sensor_delay/ms_frm),] = Auditory_sense
+            Somato_record[i_frm + int(self.Somato_sensor_delay/ms_frm),] = Somato_sense
+            
+            Auditory_sense = Auditory_record[i_frm,]
+            Somato_sense = Somato_record[i_frm,]
 
-        return  Auditory_sense, Somato_sense, Auditory_record, Somato_record
+            return  Auditory_sense, Somato_sense, Auditory_record, Somato_record
+        except Exception as e:
+            print(e)
+            pdb.set_trace()
 
 
         

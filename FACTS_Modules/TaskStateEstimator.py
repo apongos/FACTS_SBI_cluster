@@ -224,7 +224,8 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
 
         #self.Aud_delay = int(float(tse_configs['estimated_auditory_delay']) / 5) #20 #later make this separate setting in the config file
         self.Aud_delay = int(float(tse_configs['Auditory_delay']) / 5) 
-        self.cc_reduction_from_delay = int(float(tse_configs['cc_reduction_from_delay']))
+        print(f'self.Aud_delay {self.Aud_delay}')
+        self.cc_discount_from_delay = int(float(tse_configs['cc_discount_from_delay']))
         #should be able to be configured differently from the real sensory delay 
 
         #self.X2_record = np.full([self.Aud_delay,gv.x_dim*2,29],np.nan)
@@ -294,8 +295,7 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             obscov = self.P
             #pdb.set_trace()
             #StateCorrection and Eq 5 and 6
-            #print(f'cc_reduction_from_delay {self.cc_reduction_from_delay}')
-            DeltaX, DeltaCov = seutil.StateCorrectionForDelay(X2,self.Wc,Y1,self.P,z,delay_y, self.cc_reduction_from_delay)
+            DeltaX, DeltaCov = seutil.StateCorrectionForDelay(X2,self.Wc,Y1,self.P,z,delay_y, self.cc_discount_from_delay)
             
             #StateUpdate Eq 7, 
             x = x1 + DeltaX
