@@ -193,37 +193,37 @@ class Hierarchical_xdotdot(Hierarchical_Model):
             y_hat = np.array([-1, -1, -1], dtype= np.float32)
             return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced
 
-        # try:
-        a_actual = self.artic_kinematics.run(prev_a_actual,adotdot,ms_frm)
-        #print("a_actual",a_actual)
-        formants = self.acoustic_synthesis.run(a_actual)
-        #print("Maeda output",formants)
-        formants_shifted = self.auditory_perturbation.run(formants,i_frm,trial,catch)
-        formants_noise, somato_noise = self.sensory_system_noise.run(formants_shifted,a_actual)
-        formants_noise, somato_noise, formant_record, somato_record = self.sensory_system_delay.run(ms_frm, i_frm,formants_noise,somato_noise,formant_record,somato_record)
-        prev_a_tilde = a_tilde_delaywindow[0]
-        
-        #print("x_tilde",x_tilde_record[i_frm])
-        #print("x_tilde",x_tilde_record[119])
-        a_tilde, a_hat = self.artic_state_estimator.run(a_tilde_delaywindow,adotdot,somato_noise,ms_frm,i_frm,catch)
-        #pdb.set_trace()
-        #print("i_frm",i_frm)
-        #print("atilde",a_tilde)
-        x_tilde, y_hat = self.task_state_estimator.run(a_tilde_delaywindow,formants_noise,i_frm,catch,xdotdot)
-        #print('y_hat', y_hat)
+        try:
+            a_actual = self.artic_kinematics.run(prev_a_actual,adotdot,ms_frm)
+            #print("a_actual",a_actual)
+            formants = self.acoustic_synthesis.run(a_actual)
+            #print("Maeda output",formants)
+            formants_shifted = self.auditory_perturbation.run(formants,i_frm,trial,catch)
+            formants_noise, somato_noise = self.sensory_system_noise.run(formants_shifted,a_actual)
+            formants_noise, somato_noise, formant_record, somato_record = self.sensory_system_delay.run(ms_frm, i_frm,formants_noise,somato_noise,formant_record,somato_record)
+            prev_a_tilde = a_tilde_delaywindow[0]
+            
+            #print("x_tilde",x_tilde_record[i_frm])
+            #print("x_tilde",x_tilde_record[119])
+            a_tilde, a_hat = self.artic_state_estimator.run(a_tilde_delaywindow,adotdot,somato_noise,ms_frm,i_frm,catch)
+            #pdb.set_trace()
+            #print("i_frm",i_frm)
+            #print("atilde",a_tilde)
+            x_tilde, y_hat = self.task_state_estimator.run(a_tilde_delaywindow,formants_noise,i_frm,catch,xdotdot)
+            #print('y_hat', y_hat)
 
-        #print("form_hat",y_hat_record[i_frm+2])
-        #a_tilde_record[i_frm+1] = a_tilde 
-        #x_tilde_record[i_frm+1] = x_tilde
-        a_tilde_delaywindow = np.insert(a_tilde_delaywindow[0:-1,:],0,a_tilde,0) #add the most recent frame to 0 and remove the oldest frame.
-        x_tilde_delaywindow = np.insert(x_tilde_delaywindow[0:-1,:],0,x_tilde,0)
-        #print("estimator end----------------------------------------------------------------------------------------------")
+            #print("form_hat",y_hat_record[i_frm+2])
+            #a_tilde_record[i_frm+1] = a_tilde 
+            #x_tilde_record[i_frm+1] = x_tilde
+            a_tilde_delaywindow = np.insert(a_tilde_delaywindow[0:-1,:],0,a_tilde,0) #add the most recent frame to 0 and remove the oldest frame.
+            x_tilde_delaywindow = np.insert(x_tilde_delaywindow[0:-1,:],0,x_tilde,0)
+            #print("estimator end----------------------------------------------------------------------------------------------")
 
-        formants_produced = formants
-        return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced
+            formants_produced = formants
+            return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced
     
-        # except:
-        #     formants_produced = np.array([-1, -1, -1], dtype= np.float32)
-        #     a_actual = [-10000,-10000,-10000]
-        #     y_hat = np.array([-1, -1, -1], dtype= np.float32)
-        #     return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced
+        except:
+            formants_produced = np.array([-1, -1, -1], dtype= np.float32)
+            a_actual = [-10000,-10000,-10000]
+            y_hat = np.array([-1, -1, -1], dtype= np.float32)
+            return x_tilde_delaywindow, a_tilde_delaywindow, a_actual, somato_record, formant_record, adotdot, y_hat, formants_produced
