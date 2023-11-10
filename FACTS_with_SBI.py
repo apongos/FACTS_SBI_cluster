@@ -218,8 +218,8 @@ def main(num_sim, num_workers, load_and_train):
         print(f'{num_sim}, {num_workers}, {load_and_train}')
         theta, x = simulate_for_sbi(simulator2, proposal=prior, num_simulations=num_sim, num_workers=num_workers)
         #parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
-        density_estimator = inference.append_simulations(theta, x).train()
-        posterior = inference.build_posterior(density_estimator)
+        # density_estimator = inference.append_simulations(theta, x).train()
+        # posterior = inference.build_posterior(density_estimator)
         
         # Save the theta and x
         # Old file path /sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_KWANG_70-120_20-70_posterior_{num_sim}.pkl'
