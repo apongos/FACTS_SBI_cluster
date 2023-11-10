@@ -226,8 +226,8 @@ def main(num_sim, num_workers, load_and_train):
         with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_theta_x_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([theta, x], f)
         # Save the posterior
-        with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
-            pickle.dump([posterior], f)
+        # with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        #     pickle.dump([posterior], f)
         
     else:
         with open(singularity_path + '/' + load_and_train, 'rb') as f:  # Python 3: open(..., 'wb')
