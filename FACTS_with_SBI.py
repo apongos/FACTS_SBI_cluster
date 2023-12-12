@@ -204,7 +204,7 @@ def main(num_sim, num_workers, load_and_train):
     # import your simulator, define your prior over the parameters
     #prior_mean = 0.002
     prior_min= [0.0001, 0.002, 0.0001, 1e-4, 1e-8, 1e-8, 120, 120, 1]
-    prior_mmax = [0.004, 0.01, 1.0, 2.0, 1e-6, 1e-6, 250, 250, 60] 
+    prior_mmax = [0.004, 0.01, 1.0, 2.0, 1e-6, 1e-6, 250, 250, 10] 
     #num_sim = 100000
 
     # prior = torch.distributions.Uniform(torch.as_tensor(mmin), torch.as_tensor(mmax) )
