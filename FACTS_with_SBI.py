@@ -239,7 +239,7 @@ def main(num_sim, num_workers, load_and_train):
             theta2, x2 = object_file
                 
             # Run more simulations
-            theta3, x3 = simulate_for_sbi(simulator2, proposal=prior, num_simulations=num_sim, num_workers=num_workers, density_estimator='mdn')
+            theta3, x3 = simulate_for_sbi(simulator2, proposal=prior, num_simulations=100, num_workers=num_workers, density_estimator='mdn')
             
             # Append 
             theta4 = torch.cat((theta2, theta3))
