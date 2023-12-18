@@ -42,6 +42,8 @@ def simulator(theta):
             config['SensoryDelay']['Auditory_delay'] = str(theta[0][6].item())
             config['SensoryDelay']['Somato_delay'] = str(theta[0][7].item())
             config['TaskStateEstimator']['cc_discount_from_delay'] = str(theta[0][8].item())
+            config['ArticStateEstimator']['cc_discount_from_delay'] = str(theta[0][9].item())
+
 
 #             config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[0][6].item())
 #             config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[0][7].item())
@@ -59,6 +61,7 @@ def simulator(theta):
             config['SensoryDelay']['Auditory_delay'] = str(theta[6].item())
             config['SensoryDelay']['Somato_delay'] = str(theta[7].item())
             config['TaskStateEstimator']['cc_discount_from_delay'] = str(theta[8].item())
+            config['ArticStateEstimator']['cc_discount_from_delay'] = str(theta[9].item())
 
         # Note from Alvince, need to pass this in   
         config['TaskStateEstimator']['Auditory_delay']  = config['SensoryDelay']['Auditory_delay'] 
@@ -81,6 +84,7 @@ def simulator(theta):
         target_noise = 0
 
     #pdb.set_trace()
+    #print(config['ArticStateEstimator']['cc_discount_from_delay'])
     gest_name = gFile.split('/')[-1].split('/')[-1]
     np.random.seed(100)
     GestScore, ART, ms_frm, last_frm = MakeGestScore(gFile,target_noise)
@@ -203,8 +207,8 @@ def main(num_sim, num_workers, load_and_train):
     # Low - .002
     # import your simulator, define your prior over the parameters
     #prior_mean = 0.002
-    prior_min= [0.0001, 0.002, 0.0001, 1e-4, 1e-8, 1e-8, 120, 120, 1]
-    prior_mmax = [0.004, 0.01, 1.0, 2.0, 1e-6, 1e-6, 250, 250, 10] 
+    prior_min= [0.0001, 0.002, 0.0001, 1e-4, 1e-8, 1e-8, 120, 120, 1, 1]
+    prior_mmax = [0.004, 0.01, 6.0, 2.0, 1e-2, 1e-2, 250, 250, 20, 100] 
     #num_sim = 100000
 
     # prior = torch.distributions.Uniform(torch.as_tensor(mmin), torch.as_tensor(mmax) )

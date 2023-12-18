@@ -223,6 +223,7 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
         self.defP = self.P
         self.X2_record = np.full([self.Somat_delay,gv.a_dim*2,25],np.nan)
         self.P1_record = np.full([self.Somat_delay,gv.a_dim*2,gv.a_dim*2],np.nan)
+        self.cc_discount_from_delay = int(float(articstateest_configs['cc_discount_from_delay']))
     
         #should be able to be configured differently from the real sensory delay 
         self.Y_record = np.full([self.Somat_delay,gv.a_dim*2,25],np.nan) #last comment 10/27 maybe this is a bad idea
@@ -317,7 +318,8 @@ class ASE_UKF_Hier(ASE_UKF,ASEHierInterface):
 
             #StateCorrection and Eq 5 and 6
             #DeltaX, DeltaCov = seutil.StateCorrection(self.X2_record[i_frm,],self.Wc,Y1,self.P,z,delay_y)
-            DeltaX, DeltaCov = seutil.StateCorrection(delay_X2,self.Wc,Y1,self.P,z,delay_y)
+            #print(f'ASE self.cc_discount_from_delay {self.cc_discount_from_delay}')
+            DeltaX, DeltaCov = seutil.StateCorrectionForDelay(delay_X2,self.Wc,Y1,self.P,z,delay_y, self.cc_discount_from_delay )
 
             #StateUpdate Eq 7,
             delay_x = delay_x1 + DeltaX
