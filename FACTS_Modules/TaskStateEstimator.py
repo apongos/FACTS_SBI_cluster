@@ -296,7 +296,11 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             #pdb.set_trace()
             #StateCorrection and Eq 5 and 6
             DeltaX, DeltaCov = seutil.StateCorrectionForDelay(X2,self.Wc,Y1,self.P,z,delay_y, self.cc_discount_from_delay)
-            
+            self.cc_discount_from_delay = self.cc_discount_from_delay * .97
+            # print(self.cc_discount_from_delay)
+            if self.cc_discount_from_delay < 5:
+                self.cc_discount_from_delay = 5
+
             #StateUpdate Eq 7, 
             x = x1 + DeltaX
             #print('final x_tilde =  ', x)
