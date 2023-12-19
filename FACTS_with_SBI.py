@@ -207,8 +207,8 @@ def main(num_sim, num_workers, load_and_train):
     # Low - .002
     # import your simulator, define your prior over the parameters
     #prior_mean = 0.002
-    prior_min= [0.0001, 0.002, 0.0001, 1e-4, 1e-8, 1e-8, 120, 120, 1, 1]
-    prior_mmax = [0.004, 0.01, 6.0, 2.0, 1e-2, 1e-2, 250, 250, 20, 100] 
+    prior_min= [0.0001, 0.002, 0.0001, 1e-4, 1e-8, 1e-8, 120, 120, 1, 100]
+    prior_mmax = [0.004, 0.01, 6.0, 2.0, 1e-2, 1e-2, 250, 250, 20, 1000]
     #num_sim = 100000
 
     # prior = torch.distributions.Uniform(torch.as_tensor(mmin), torch.as_tensor(mmax) )
@@ -219,7 +219,7 @@ def main(num_sim, num_workers, load_and_train):
     if not load_and_train:
 
         inference = SNPE(prior)
-        print(f'{num_sim}, {num_workers}, {load_and_train}')
+        # print(f'{num_sim}, {num_workers}, {load_and_train}')
         theta, x = simulate_for_sbi(simulator2, proposal=prior, num_simulations=num_sim, num_workers=num_workers)
         #parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
         # density_estimator = inference.append_simulations(theta, x).train()
