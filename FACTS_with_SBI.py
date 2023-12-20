@@ -220,7 +220,7 @@ def main(num_sim, num_workers, load_and_train):
 
         inference = SNPE(prior)
         # print(f'{num_sim}, {num_workers}, {load_and_train}')
-        theta, x = simulate_for_sbi(simulator2, proposal=prior, num_simulations=num_sim, num_workers=num_workers)
+        theta, x = simulate_for_sbi(simulator2, proposal=prior, num_simulations=1000, num_workers=num_workers)
         #parameter_posterior = infer(simulator, prior, method='SNPE', num_simulations=num_sim, num_workers=num_workers)
         # density_estimator = inference.append_simulations(theta, x).train()
         # posterior = inference.build_posterior(density_estimator)
