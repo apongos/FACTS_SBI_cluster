@@ -44,6 +44,7 @@ def simulator(theta):
             config['TaskStateEstimator']['cc_discount_from_delay'] = str(theta[0][8].item())
             config['ArticStateEstimator']['cc_discount_from_delay'] = str(theta[0][9].item())
 
+            config['TaskStateEstimator']['cc_decay'] = str(theta[0][10].item())
 
 #             config['TaskStateEstimator']['estimated_auditory_delay'] = str(theta[0][6].item())
 #             config['ArticStateEstimator']['estimated_somat_delay'] = str(theta[0][7].item())
@@ -62,6 +63,8 @@ def simulator(theta):
             config['SensoryDelay']['Somato_delay'] = str(theta[7].item())
             config['TaskStateEstimator']['cc_discount_from_delay'] = str(theta[8].item())
             config['ArticStateEstimator']['cc_discount_from_delay'] = str(theta[9].item())
+
+            config['TaskStateEstimator']['cc_decay'] = str(theta[10].item())
 
         # Note from Alvince, need to pass this in   
         config['TaskStateEstimator']['Auditory_delay']  = config['SensoryDelay']['Auditory_delay'] 
@@ -207,8 +210,8 @@ def main(num_sim, num_workers, load_and_train):
     # Low - .002
     # import your simulator, define your prior over the parameters
     #prior_mean = 0.002
-    prior_min= [0.0001, 0.002, 0.0001, 1e-4, 1e-8, 1e-8, 75, 75, 100, 30]
-    prior_mmax = [0.004, 0.01, 6.0, 2.0, 1e-4, 1e-4, 250, 250, 200, 200]
+    prior_min= [0.0001, 0.002, 0.0001, 1e-4, 1e-8, 1e-8, 75, 75, 90, 30, 0.95]
+    prior_mmax = [0.004, 0.01, 6.0, 2.0, 1e-4, 1e-4, 250, 250, 200, 200, 0.97]
     #num_sim = 100000
 
     # prior = torch.distributions.Uniform(torch.as_tensor(mmin), torch.as_tensor(mmax) )
