@@ -225,9 +225,9 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
         #self.Aud_delay = int(float(tse_configs['estimated_auditory_delay']) / 5) #20 #later make this separate setting in the config file
         self.Aud_delay = int(float(tse_configs['Auditory_delay']) / 5) 
         #print(f'self.Aud_delay {self.Aud_delay}')
-        self.cc_discount_from_delay = int(float(tse_configs['cc_discount_from_delay']))
-        self.cc_decay = int(float(tse_configs['cc_decay']))
-        self.cc_discount_minimum = int(float(tse_configs['cc_discount_minimum']))
+        self.cc_discount_from_delay = float(tse_configs['cc_discount_from_delay'])
+        self.cc_decay = float(tse_configs['cc_decay'])
+        self.cc_discount_minimum = float(tse_configs['cc_discount_minimum'])
         #should be able to be configured differently from the real sensory delay 
 
         #self.X2_record = np.full([self.Aud_delay,gv.x_dim*2,29],np.nan)
