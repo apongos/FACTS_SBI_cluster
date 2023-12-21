@@ -227,6 +227,7 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
         #print(f'self.Aud_delay {self.Aud_delay}')
         self.cc_discount_from_delay = int(float(tse_configs['cc_discount_from_delay']))
         self.cc_decay = int(float(tse_configs['cc_decay']))
+        self.cc_discount_minimum = int(float(tse_configs['cc_discount_minimum']))
         #should be able to be configured differently from the real sensory delay 
 
         #self.X2_record = np.full([self.Aud_delay,gv.x_dim*2,29],np.nan)
@@ -299,8 +300,8 @@ class TSE_LWPR_Hier_xdotdot(TSE_LWPR_Hier):
             DeltaX, DeltaCov = seutil.StateCorrectionForDelay(X2,self.Wc,Y1,self.P,z,delay_y, self.cc_discount_from_delay)
             self.cc_discount_from_delay = self.cc_discount_from_delay * self.cc_decay
             # print(self.cc_discount_from_delay)
-            if self.cc_discount_from_delay < 3:
-                self.cc_discount_from_delay = 3
+            if self.cc_discount_from_delay < self.cc_discount_minimum:
+                self.cc_discount_from_delay = self.cc_discount_minimum
 
             #StateUpdate Eq 7, 
             x = x1 + DeltaX
