@@ -1232,8 +1232,8 @@ class ASE_UKF_Hier_NoiseEst(ASE_UKF_Hier, ASEHierInterface):
 
 def main(num_sim, num_workers, load_and_train):
 
-    print(os.getcwd())
-    print(os.listdir(os.curdir))
+    # print(os.getcwd())
+    # print(os.listdir(os.curdir))
 
     # If environment variables are passed, use them
     if os.environ.get('ENV_NUM_WORKERS') is not None:
@@ -1244,7 +1244,7 @@ def main(num_sim, num_workers, load_and_train):
         load_and_train = os.environ.get('ENV_LOAD_AND_TRAIN')
 
     # Import real observed data
-    singularity_path = '/home/FACTS' #'./' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
+    singularity_path = './' #'./' #'/wynton/home/nagarajan/apongos/FACTS_with_SBI/FACTS_SBI_output' #'/home/FACTS'
     # trial_cells_times = scipy.io.loadmat(singularity_path+'/sbi_resources/formant_pert_time_cleaned.mat')['time_matrix'].T
     # trial_cells_mat = scipy.io.loadmat(singularity_path+'/sbi_resources/formant_pert_data_cleaned.mat')['cleaned_matrix'].T # 1797 x 194 == trials by time
     # trial_cells_times = trial_cells_times[:,0:150]
@@ -1261,12 +1261,11 @@ def main(num_sim, num_workers, load_and_train):
     # Low - .002
     # import your simulator, define your prior over the parameters
     #prior_mean = 0.002
-    # prior_min= [0.0001, 0.0002, 0.01, 1e-8, 1e-8, 1e-8, 75, 75, 90, 30, 0.94, 1]
-    # prior_mmax = [0.004, 0.01, 10.0, 1e-4, 1e-4, 1e-4, 200, 200, 200, 100, 1.0, 15]
+    # prior_min= [0.0001, 0.0001, 0.01, 1e-8, 1e-8, 1e-8, 140, 90, 90, 40, 0.95, 4]
+    # prior_mmax = [0.01, 0.001, 6.0, 1e-5, 1e-5, 1e-5, 200, 110, 110, 80, 0.96, 8]
 
     prior_min= [0.0001, 0.0001, 0.09, 1e-7, 1e-7, 1e-7, 145, 90, 90, 70, 0.95, 5]
     prior_mmax = [0.001, 0.001, 0.2, 1e-6, 1e-6, 1e-6, 155, 110, 110, 80, 0.96, 7]
-
     #num_sim = 100000
 
     # prior = torch.distributions.Uniform(torch.as_tensor(mmin), torch.as_tensor(mmax) )
@@ -1285,41 +1284,41 @@ def main(num_sim, num_workers, load_and_train):
         
         # Save the theta and x
         # Old file path /sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_KWANG_70-120_20-70_posterior_{num_sim}.pkl'
-        with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_theta_x_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        with open(singularity_path+f'/sbi_resources/local_ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_theta_x_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             pickle.dump([theta, x], f)
         # Save the posterior
         # with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_posterior_{num_sim}.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
         #     pickle.dump([posterior], f)
         
-    else:
-        with open(singularity_path + '/' + load_and_train, 'rb') as f:  # Python 3: open(..., 'wb')
-            object_file = pickle.load(f)
-            theta2, x2 = object_file
+    # else:
+    #     with open(singularity_path + '/' + load_and_train, 'rb') as f:  # Python 3: open(..., 'wb')
+    #         object_file = pickle.load(f)
+    #         theta2, x2 = object_file
                 
-            # Run more simulations
-            theta3, x3 = simulate_for_sbi(simulator2, proposal=prior, num_simulations=100, num_workers=num_workers, density_estimator='mdn')
+    #         # Run more simulations
+    #         theta3, x3 = simulate_for_sbi(simulator2, proposal=prior, num_simulations=100, num_workers=num_workers, density_estimator='mdn')
             
-            # Append 
-            theta4 = torch.cat((theta2, theta3))
-            x4 = torch.cat((x2, x3))
+    #         # Append 
+    #         theta4 = torch.cat((theta2, theta3))
+    #         x4 = torch.cat((x2, x3))
             
-            density_estimator = inference.append_simulations(theta4, x4).train(force_first_round_loss=True) # Look more into force_first_round_loss=True
-            posterior2 = inference.build_posterior(density_estimator)
+    #         density_estimator = inference.append_simulations(theta4, x4).train(force_first_round_loss=True) # Look more into force_first_round_loss=True
+    #         posterior2 = inference.build_posterior(density_estimator)
 
-            # Save
-            new_num_simulation = int(find_between( load_and_train, 'theta_x_', '.pkl' ))+num_sim
-            with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_theta_x_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
-                pickle.dump([theta4, x4], f2)
-                # Save the posterior
-            with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_posterior_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
-                pickle.dump([posterior2], f2)
+    #         # Save
+    #         new_num_simulation = int(find_between( load_and_train, 'theta_x_', '.pkl' ))+num_sim
+    #         with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_theta_x_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
+    #             pickle.dump([theta4, x4], f2)
+    #             # Save the posterior
+    #         with open(singularity_path+f'/sbi_resources/ModelC_auditory_soma_noise_TSE_ASE_Delay_cc_reduction_from_delay_posterior_{new_num_simulation}.pkl', 'wb') as f2:  # Python 3: open(..., 'wb')
+    #             pickle.dump([posterior2], f2)
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Perform SBI on FACTS parameters')
 
-    parser.add_argument('--num_sim', type=int, required=False, default=100,
+    parser.add_argument('--num_sim', type=str, required=False, default=10,
                         help='number of simulations')
     parser.add_argument('--num_workers', type=int, required=False, default=1,
                         help='number of cores to use')
