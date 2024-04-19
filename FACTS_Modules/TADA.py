@@ -77,7 +77,7 @@ def MakeGestScore(fileName,target_noise):
             break        
         
 ###################UPDATE TV SCORE for PARAMETERS#############################
-    #Blending different lines of TV.g files accoridng to each task state index 
+    #Blending different lines of TV.g files according to each task state index 
     TV_SCORE = BlendTV(TV_SCORE,n_frm)    
     # Note for later... work on ART term and weight matrix (TOTWGT), necessary for ArticSFCLaw
     ART = makeTOTWGT(TV_SCORE,ms_frm, last_frm,5) 
