@@ -1,0 +1,8 @@
+{
+  "posterior_class": "<class 'sbi.inference.posteriors.direct_posterior.DirectPosterior'>",
+  "inference_class": "<class 'sbi.inference.snpe.snpe_c.SNPE_C'>",
+  "rebuild_notes": [
+    "To rebuild, recreate the same prior and the same density estimator architecture, then load state_dict.",
+    "Also document x/theta normalization and any embedding net used."
+  ]
+}
